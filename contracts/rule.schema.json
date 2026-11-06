@@ -2,8 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "rule.schema.json",
   "title": "Rule",
-  "description": "Satu aturan di services/api/rules/*.yaml (file YAML berisi daftar aturan). Regex dicompile dengan re.MULTILINE. Aturan tanpa minimal satu contoh positive dan satu negative ditolak saat dimuat.",
+  "description": "Satu aturan di services/api/rules/*.yaml (file YAML berisi daftar aturan). Regex dicompile dengan re.MULTILINE. Aturan tanpa minimal satu contoh positive dan satu negative ditolak saat dimuat. Kunci yang tidak dikenal di aturan atau match ditolak (cegah typo yang diam-diam mematikan konteks).",
   "type": "object",
+  "additionalProperties": false,
   "required": ["id", "layer", "category", "severity", "applies_to", "match", "message", "tests"],
   "properties": {
     "id":         { "type": "string", "pattern": "^R-(L3|L4|PII)-\\d{3}$", "description": "unik di seluruh rule set" },
@@ -15,6 +16,7 @@
     "applies_to": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["caption", "ocr"] } },
     "match": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["any_regex"],
       "properties": {
         "any_regex":        { "type": "array", "minItems": 1, "items": { "type": "string" } },

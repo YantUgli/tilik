@@ -301,3 +301,140 @@ def test_analysis_result_top_reasons_use_finding_id_pattern() -> None:
     result = _load_json(EXAMPLES / "analysis-result.valid.json")
     result["risk"]["top_reasons"] = ["f-1"]
     assert not is_valid("analysis-result", result)
+
+
+# --- Keputusan review sebelum tag contracts-v1.0 (A–E) ---------------------
+
+
+@pytest.mark.parametrize(
+    ("bbox", "ok"),
+    [([0, 0, 1, 1], True), ([0.41, 0.12, 0.18, 0.03], True),
+     ([-0.01, 0.1, 0.2, 0.2], False), ([0.1, 0.1, 1.2, 0.2], False)],
+)
+def test_finding_bbox_range(bbox: list[float], ok: bool) -> None:
+    finding = _valid_finding()
+    finding["evidence"]["bboxes"] = [bbox]
+    assert is_valid("finding", finding) is ok
+
+
+def _valid_visual() -> dict:
+    return copy.deepcopy(_load_json(EXAMPLES / "visual-response.valid.json"))
+
+
+def test_visual_response_l2_constraints() -> None:
+    assert is_valid("visual-response", _valid_visual())
+
+    not_experimental = _valid_visual()
+    not_experimental["layers"][0]["findings"][0]["experimental"] = False
+    assert not is_valid("visual-response", not_experimental)
+
+    experimental_missing = _valid_visual()
+    del experimental_missing["layers"][0]["findings"][0]["experimental"]
+    assert not is_valid("visual-response", experimental_missing)
+
+    tinggi = _valid_visual()
+    tinggi["layers"][0]["findings"][0]["severity"] = "tinggi"
+    assert not is_valid("visual-response", tinggi)
+
+    for provider in ("rule", "browser"):
+        wrong_provider = _valid_visual()
+        wrong_provider["layers"][0]["provider"] = provider
+        assert not is_valid("visual-response", wrong_provider), provider
+
+
+@pytest.mark.parametrize(
+    ("path", "key"),
+    [((), "sigal"), (("match",), "negative_contxt")],
+)
+def test_rule_rejects_unknown_keys(path: tuple[str, ...], key: str) -> None:
+    rule = _valid_rule()
+    node = rule
+    for part in path:
+        node = node[part]
+    node[key] = ["x"]
+    assert not is_valid("rule", rule)
+
+
+@pytest.mark.parametrize(
+    ("status", "provider", "ok"),
+    [("ok", "fireworks", True), ("ok", None, False),
+     ("error", "groq", True), ("error", None, True),
+     ("skipped", None, True), ("skipped", "groq", False),
+     ("unavailable", None, True), ("unavailable", "fireworks", False),
+     ("error", "rule", False)],
+)
+def test_caption_response_llm_provider_by_status(status: str, provider: str | None, ok: bool) -> None:
+    response = _load_json(EXAMPLES / "caption-response.valid.l4-llm-error.json")
+    response["layers"][2]["status"] = status
+    response["layers"][2]["provider"] = provider
+    assert is_valid("caption-response", response) is ok
+
+
+def test_caption_response_empty_input_shape() -> None:
+    """caption dan ocr_text kosong -> 200: L3/L4 aturan ok tanpa temuan, L4 LLM skipped."""
+    response = _load_json(EXAMPLES / "caption-response.valid.l4-llm-skipped.json")
+    assert is_valid("caption-response", response)
+    l3, l4_rule, l4_llm = response["layers"]
+    assert (l3["status"], l3["findings"]) == ("ok", [])
+    assert (l4_rule["status"], l4_rule["findings"]) == ("ok", [])
+    assert (l4_llm["status"], l4_llm["provider"]) == ("skipped", None)
+
+
+# Setiap contoh invalid harus ditolak karena alasan yang dimaksud: himpunan path
+# error (absolute_path) harus persis sama dengan yang tercatat di sini.
+INVALID_REASONS: dict[str, set[tuple]] = {
+    "analysis-result.invalid.missing-incomplete.json": {("risk",)},
+    "analysis-result.invalid.risk-level-info.json": {("risk", "level")},
+    "analysis-result.invalid.wrong-schema-version.json": {("schema_version",)},
+    "caption-response.invalid.missing-request-id.json": {()},
+    "caption-response.invalid.ok-without-provider.json": {("layers", 2, "provider")},
+    "caption-response.invalid.two-layers-only.json": {("layers",)},
+    "caption-response.invalid.unavailable-with-provider.json": {("layers", 2, "provider")},
+    "caption-response.invalid.wrong-order.json": {("layers", 0, "layer"), ("layers", 1, "layer")},
+    "error.invalid.missing-message.json": {("error",)},
+    "error.invalid.unknown-code.json": {("error", "code")},
+    "finding.invalid.bad-id-prefix.json": {("id",)},
+    "finding.invalid.bad-rule-ref.json": {("rule_ref",)},
+    "finding.invalid.bbox-out-of-range.json": {("evidence", "bboxes", 0, 2)},
+    "finding.invalid.bbox-three-numbers.json": {("evidence", "bboxes", 0)},
+    "finding.invalid.evidence-text-too-long.json": {("evidence", "text")},
+    "finding.invalid.missing-severity.json": {()},
+    "finding.invalid.unknown-category.json": {("category",)},
+    "health.invalid.bad-provider-status.json": {("providers", "fireworks")},
+    "health.invalid.missing-version.json": {()},
+    "layer-result.invalid.bad-status.json": {("status",)},
+    "layer-result.invalid.missing-findings.json": {()},
+    "layer-result.invalid.negative-latency.json": {("latency_ms",)},
+    "llm-text-output.invalid.evidence-too-long.json": {("findings", 0, "evidence_text")},
+    "llm-text-output.invalid.explanation-too-long.json": {("findings", 0, "explanation")},
+    "llm-text-output.invalid.extra-field.json": {("findings", 0)},
+    "llm-text-output.invalid.extra-top-level-field.json": {()},
+    "llm-text-output.invalid.non-l4-category.json": {("findings", 0, "category")},
+    "llm-text-output.invalid.severity-info.json": {("findings", 0, "severity")},
+    "llm-visual-output.invalid.extra-field.json": {("findings", 0)},
+    "llm-visual-output.invalid.missing-has-text-document.json": {()},
+    "llm-visual-output.invalid.numeric-confidence.json": {("findings", 0, "confidence")},
+    "rule.invalid.bad-id.json": {("id",)},
+    "rule.invalid.bad-signal.json": {("signal",)},
+    "rule.invalid.empty-any-regex.json": {("match", "any_regex")},
+    "rule.invalid.empty-positive-tests.json": {("tests", "positive")},
+    "rule.invalid.match-unknown-key.json": {("match",)},
+    "rule.invalid.missing-negative-tests.json": {("tests",)},
+    "rule.invalid.unknown-key.json": {()},
+    "visual-response.invalid.l2-not-experimental.json": {("layers", 0, "findings", 0, "experimental")},
+    "visual-response.invalid.l2-severity-tinggi.json": {("layers", 0, "findings", 0, "severity")},
+    "visual-response.invalid.missing-has-text-document.json": {()},
+    "visual-response.invalid.provider-rule.json": {("layers", 0, "provider")},
+    "visual-response.invalid.wrong-layer.json": {("layers", 0, "layer")},
+}
+
+
+def test_invalid_reasons_cover_all_examples() -> None:
+    assert set(INVALID_REASONS) == {p.name for p in INVALID_EXAMPLES}
+
+
+@pytest.mark.parametrize("path", INVALID_EXAMPLES, ids=_ids(INVALID_EXAMPLES))
+def test_examples_invalid_for_intended_reason(path: Path) -> None:
+    v = validator(_schema_name(path))
+    error_paths = {tuple(e.absolute_path) for e in v.iter_errors(_load_json(path))}
+    assert error_paths == INVALID_REASONS[path.name]
