@@ -1,0 +1,34 @@
+{
+  "id": "R-L3-002",
+  "layer": "L3",
+  "category": "klasifikasi",
+  "severity": "perhatian",
+  "signal": "generic",
+  "applies_to": [
+    "ocr"
+  ],
+  "match": {
+    "any_regex": [
+      "\\b(SANGAT\\s+RAHASIA|RAHASIA|TERBATAS|KONFIDENSIAL)\\b"
+    ],
+    "require_context": [
+      "\\b(KLASIFIKASI|NOMOR|NO\\.|KEPADA|DARI|TEMBUSAN|PERIHAL|DERAJAT)\\b"
+    ],
+    "negative_contxt": [
+      "(?i)resep|rahasia (umum|dapur|sukses)|edisi terbatas"
+    ]
+  },
+  "redact": "matched_words",
+  "message": "Tampak ada tanda klasifikasi dokumen.",
+  "explanation": "Dokumen bertanda klasifikasi tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto.",
+  "basis": "Amanat Upacara Bendera 17 April 2024: pengamanan berita",
+  "tests": {
+    "positive": [
+      "KLASIFIKASI : RAHASIA\nNOMOR : ST/123/2026"
+    ],
+    "negative": [
+      "resep rahasia ayam goreng",
+      "EDISI TERBATAS"
+    ]
+  }
+}

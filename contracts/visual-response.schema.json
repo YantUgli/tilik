@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "visual-response.schema.json",
   "title": "VisualResponse",
-  "description": "Respons 200 POST /analyze/visual. layers berisi satu LayerResult L2.",
+  "description": "Respons 200 POST /analyze/visual. layers berisi satu LayerResult L2. Temuan L2 wajib experimental: true dan severity maksimal perhatian.",
   "type": "object",
   "required": ["request_id", "layers", "has_text_document"],
   "properties": {
@@ -13,7 +13,20 @@
       "maxItems": 1,
       "items": {
         "allOf": [{ "$ref": "layer-result.schema.json" }],
-        "properties": { "layer": { "const": "L2" } }
+        "properties": {
+          "layer":    { "const": "L2" },
+          "provider": { "not": { "enum": ["rule", "browser"] }, "description": "provider VLM yang menjawab, atau null" },
+          "findings": {
+            "items": {
+              "description": "temuan L2 selalu eksperimental dan maksimal perhatian (FR-L2-02)",
+              "required": ["experimental"],
+              "properties": {
+                "experimental": { "const": true },
+                "severity":     { "enum": ["info", "perhatian"] }
+              }
+            }
+          }
+        }
       }
     },
     "has_text_document": { "type": ["boolean", "null"], "description": "null bila lapis visual tidak menjawab" }

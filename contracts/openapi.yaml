@@ -80,6 +80,10 @@ components:
     CaptionRequest:
       type: object
       required: [caption, ocr_text, lang]
+      description: >-
+        Bila caption dan ocr_text sama-sama kosong (null, string kosong, atau hanya
+        spasi), respons tetap 200: L3 dan L4 aturan ok dengan findings kosong,
+        L4 LLM skipped dengan provider null.
       properties:
         caption:
           type: [string, "null"]
@@ -99,7 +103,10 @@ components:
         image:
           type: string
           contentMediaType: application/octet-stream
-          description: Gambar yang sudah diperkecil di browser, sisi terpanjang ≤ 1024 px.
+          description: >-
+            Gambar yang sudah diperkecil di browser, sisi terpanjang ≤ 1024 px.
+            Hanya JPG, PNG, atau WebP (diperiksa lewat magic bytes, bukan ekstensi),
+            ukuran ≤ 10 MB, dimensi ≤ 40 MP. Pelanggaran → 400 INVALID_INPUT.
 
   responses:
     InvalidInput:

@@ -23,7 +23,7 @@
       "properties": {
         "text":   { "type": "string", "maxLength": 200 },
         "where":  { "enum": ["caption", "ocr", "image"] },
-        "bboxes": { "type": "array", "items": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+        "bboxes": { "type": "array", "items": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 4, "maxItems": 4 },
                     "description": "[x, y, w, h] relatif 0..1 terhadap gambar asli (bukan versi 1024 px yang dikirim ke server)" }
       }
     },
