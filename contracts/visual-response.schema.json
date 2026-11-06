@@ -12,10 +12,21 @@
       "minItems": 1,
       "maxItems": 1,
       "items": {
-        "allOf": [{ "$ref": "layer-result.schema.json" }],
+        "allOf": [
+          { "$ref": "layer-result.schema.json" },
+          {
+            "if": { "properties": { "status": { "enum": ["skipped", "unavailable"] } }, "required": ["status"] },
+            "then": { "properties": { "provider": { "const": null } } }
+          },
+          {
+            "if": { "properties": { "status": { "const": "ok" } }, "required": ["status"] },
+            "then": { "properties": { "provider": { "type": "string" } } }
+          }
+        ],
         "properties": {
           "layer":    { "const": "L2" },
-          "provider": { "not": { "enum": ["rule", "browser"] }, "description": "provider VLM yang menjawab, atau null" },
+          "provider": { "not": { "enum": ["rule", "browser"] },
+                        "description": "provider VLM yang menjawab. ok: wajib nama provider. skipped/unavailable: null. error: nama provider, atau null bila gagal sebelum ada provider yang menjawab." },
           "findings": {
             "items": {
               "description": "temuan L2 selalu eksperimental dan maksimal perhatian (FR-L2-02)",

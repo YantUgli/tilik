@@ -1,0 +1,14 @@
+{
+  "request_id": "req-c005",
+  "layers": [
+    {
+      "layer": "L2",
+      "status": "error",
+      "provider": null,
+      "latency_ms": 5,
+      "note": "Kesalahan internal sebelum provider dipanggil",
+      "findings": []
+    }
+  ],
+  "has_text_document": null
+}

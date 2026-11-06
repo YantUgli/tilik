@@ -424,7 +424,9 @@ INVALID_REASONS: dict[str, set[tuple]] = {
     "visual-response.invalid.l2-not-experimental.json": {("layers", 0, "findings", 0, "experimental")},
     "visual-response.invalid.l2-severity-tinggi.json": {("layers", 0, "findings", 0, "severity")},
     "visual-response.invalid.missing-has-text-document.json": {()},
+    "visual-response.invalid.ok-without-provider.json": {("layers", 0, "provider")},
     "visual-response.invalid.provider-rule.json": {("layers", 0, "provider")},
+    "visual-response.invalid.unavailable-with-provider.json": {("layers", 0, "provider")},
     "visual-response.invalid.wrong-layer.json": {("layers", 0, "layer")},
 }
 
@@ -438,3 +440,26 @@ def test_examples_invalid_for_intended_reason(path: Path) -> None:
     v = validator(_schema_name(path))
     error_paths = {tuple(e.absolute_path) for e in v.iter_errors(_load_json(path))}
     assert error_paths == INVALID_REASONS[path.name]
+
+
+@pytest.mark.parametrize(
+    ("status", "provider", "ok"),
+    [("ok", "fireworks", True), ("ok", None, False),
+     ("error", "fireworks", True), ("error", None, True),
+     ("skipped", None, True), ("skipped", "groq", False),
+     ("unavailable", None, True), ("unavailable", "fireworks", False)],
+)
+def test_visual_response_provider_by_status(status: str, provider: str | None, ok: bool) -> None:
+    response = _valid_visual()
+    layer = response["layers"][0]
+    layer.update(status=status, provider=provider)
+    if status != "ok":
+        layer["findings"] = []
+    assert is_valid("visual-response", response) is ok
+
+
+def test_visual_response_error_without_provider_example() -> None:
+    response = _load_json(EXAMPLES / "visual-response.valid.error-no-provider.json")
+    assert is_valid("visual-response", response)
+    layer = response["layers"][0]
+    assert (layer["status"], layer["provider"], layer["findings"]) == ("error", None, [])
