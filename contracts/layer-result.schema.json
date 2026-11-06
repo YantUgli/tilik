@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "layer-result.schema.json",
+  "title": "LayerResult",
+  "description": "Hasil satu lapis analisis. Satu analisis bisa punya dua LayerResult dengan layer L4 (aturan dan LLM), jadi layer bukan kunci unik.",
+  "type": "object",
+  "required": ["layer", "status", "provider", "latency_ms", "findings", "note"],
+  "properties": {
+    "layer":      { "$ref": "finding.schema.json#/properties/layer" },
+    "status":     { "enum": ["ok", "skipped", "unavailable", "error"] },
+    "provider":   { "enum": ["fireworks", "groq", "cloudflare", "ollama", "rule", "browser", null] },
+    "latency_ms": { "type": "integer", "minimum": 0 },
+    "findings":   { "type": "array", "items": { "$ref": "finding.schema.json" },
+                    "description": "boleh kosong; status selain ok tetap mengembalikan LayerResult" },
+    "note":       { "type": ["string", "null"], "description": "mis. alasan unavailable, atau info bahwa ocr_text dipotong" }
+  }
+}

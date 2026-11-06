@@ -1,0 +1,14 @@
+{
+  "id": "c-2",
+  "layer": "L3",
+  "category": "derajat",
+  "severity": "perhatian",
+  "source": "rule",
+  "rule_ref": "R-L3-004",
+  "message": "Tampak ada tanda derajat surat (mis. KILAT).",
+  "evidence": {
+    "text": "DERAJAT : KILAT",
+    "where": "ocr"
+  },
+  "redactable": true
+}

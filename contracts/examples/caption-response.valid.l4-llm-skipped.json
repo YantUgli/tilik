@@ -1,0 +1,29 @@
+{
+  "request_id": "req-a002",
+  "layers": [
+    {
+      "layer": "L3",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 3,
+      "note": null,
+      "findings": []
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 2,
+      "note": null,
+      "findings": []
+    },
+    {
+      "layer": "L4",
+      "status": "skipped",
+      "provider": null,
+      "latency_ms": 0,
+      "note": "Caption dan teks OCR kosong",
+      "findings": []
+    }
+  ]
+}

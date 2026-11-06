@@ -1,0 +1,9 @@
+{
+  "findings": [
+    {
+      "category": "kendaraan_tempur",
+      "description": "Kendaraan lapis baja di halaman berpagar.",
+      "confidence": "sedang"
+    }
+  ]
+}

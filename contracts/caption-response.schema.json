@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "caption-response.schema.json",
+  "title": "CaptionResponse",
+  "description": "Respons 200 POST /analyze/caption. layers selalu tepat tiga, berurutan: L3 aturan, L4 aturan, L4 LLM. Kegagalan LLM hanya mengubah status elemen ketiga.",
+  "type": "object",
+  "required": ["request_id", "layers"],
+  "properties": {
+    "request_id": { "type": "string" },
+    "layers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": false,
+      "prefixItems": [
+        {
+          "description": "L3, provider rule",
+          "allOf": [{ "$ref": "layer-result.schema.json" }],
+          "properties": { "layer": { "const": "L3" }, "provider": { "const": "rule" } }
+        },
+        {
+          "description": "L4, provider rule",
+          "allOf": [{ "$ref": "layer-result.schema.json" }],
+          "properties": { "layer": { "const": "L4" }, "provider": { "const": "rule" } }
+        },
+        {
+          "description": "L4, provider = provider LLM yang menjawab, atau null bila skipped/unavailable",
+          "allOf": [{ "$ref": "layer-result.schema.json" }],
+          "properties": { "layer": { "const": "L4" }, "provider": { "not": { "enum": ["rule", "browser"] } } },
+          "if": { "properties": { "status": { "enum": ["skipped", "unavailable"] } }, "required": ["status"] },
+          "then": { "properties": { "provider": { "const": null } } },
+          "else": { "properties": { "provider": { "type": "string" } } }
+        }
+      ]
+    }
+  }
+}

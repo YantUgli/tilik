@@ -1,0 +1,128 @@
+openapi: 3.1.0
+info:
+  title: TILIK API
+  version: "1.0"
+  description: >-
+    Analisis caption/teks OCR dan visual sebelum foto diunggah. Stateless: input
+    tidak disimpan dan tidak dicatat di log. Skema respons dirujuk dari file
+    *.schema.json di folder yang sama.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+paths:
+  /analyze/caption:
+    post:
+      operationId: analyzeCaption
+      summary: Analisis caption dan teks OCR (L3 aturan, L4 aturan, L4 LLM)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptionRequest"
+      responses:
+        "200":
+          description: Tiga LayerResult berurutan; kegagalan LLM hanya mengubah status elemen ketiga.
+          content:
+            application/json:
+              schema:
+                $ref: "./caption-response.schema.json"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/Internal"
+        "503":
+          $ref: "#/components/responses/ProviderUnavailable"
+
+  /analyze/visual:
+    post:
+      operationId: analyzeVisual
+      summary: Analisis visual (L2) dan deteksi dokumen/layar berisi teks
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/VisualRequest"
+      responses:
+        "200":
+          description: Satu LayerResult L2 dan has_text_document.
+          content:
+            application/json:
+              schema:
+                $ref: "./visual-response.schema.json"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/Internal"
+        "503":
+          $ref: "#/components/responses/ProviderUnavailable"
+
+  /health:
+    get:
+      operationId: health
+      summary: Status layanan dan provider
+      responses:
+        "200":
+          description: Layanan hidup; status tiap provider di providers.
+          content:
+            application/json:
+              schema:
+                $ref: "./health.schema.json"
+        "500":
+          $ref: "#/components/responses/Internal"
+
+components:
+  schemas:
+    CaptionRequest:
+      type: object
+      required: [caption, ocr_text, lang]
+      properties:
+        caption:
+          type: [string, "null"]
+          maxLength: 2200
+          description: Lebih dari 2.200 karakter ditolak dengan 400 INVALID_INPUT.
+        ocr_text:
+          type: [string, "null"]
+          description: >-
+            Lebih dari 8.000 karakter dipotong (bukan ditolak); note di LayerResult diisi.
+            Diperlakukan sebagai data tak tepercaya.
+        lang:
+          const: id
+    VisualRequest:
+      type: object
+      required: [image]
+      properties:
+        image:
+          type: string
+          contentMediaType: application/octet-stream
+          description: Gambar yang sudah diperkecil di browser, sisi terpanjang ≤ 1024 px.
+
+  responses:
+    InvalidInput:
+      description: INVALID_INPUT
+      content:
+        application/json:
+          schema:
+            $ref: "./error.schema.json"
+    RateLimited:
+      description: RATE_LIMITED
+      content:
+        application/json:
+          schema:
+            $ref: "./error.schema.json"
+    Internal:
+      description: INTERNAL
+      content:
+        application/json:
+          schema:
+            $ref: "./error.schema.json"
+    ProviderUnavailable:
+      description: PROVIDER_UNAVAILABLE
+      content:
+        application/json:
+          schema:
+            $ref: "./error.schema.json"

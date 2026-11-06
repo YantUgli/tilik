@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "category": "jadwal_pergerakan",
+      "severity": "tinggi",
+      "evidence_text": "besok subuh berangkat",
+      "where": "caption",
+      "explanation": "Caption menyebut waktu keberangkatan. Informasi ini sebaiknya dibagikan setelah kegiatan selesai."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "b-1",
+  "layer": "L1",
+  "category": "gps",
+  "severity": "tinggi",
+  "source": "exif",
+  "message": "Foto ini menyimpan koordinat lokasi pengambilan.",
+  "explanation": "Siapa pun yang mengunduh foto bisa melihat titik lokasinya."
+}

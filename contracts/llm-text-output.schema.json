@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "llm-text-output.schema.json",
+  "title": "LlmTextOutput",
+  "description": "Output yang wajib dikembalikan LLM teks. Backend memetakannya ke Finding (mengisi id, layer, source, experimental); evidence_text yang tidak ditemukan di input dibuang.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["findings"],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "severity", "evidence_text", "where", "explanation"],
+        "properties": {
+          "category":      { "enum": ["jadwal_pergerakan", "lokasi_penugasan", "politik_praktis", "provokasi", "info_pribadi"] },
+          "severity":      { "enum": ["perhatian", "tinggi"] },
+          "evidence_text": { "type": "string", "maxLength": 200, "description": "kutipan dari input" },
+          "where":         { "enum": ["caption", "ocr"] },
+          "explanation":   { "type": "string", "maxLength": 400, "description": "maksimal 2 kalimat" }
+        }
+      }
+    }
+  }
+}
