@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "visual-response.schema.json",
+  "title": "VisualResponse",
+  "description": "Respons 200 POST /analyze/visual. layers berisi satu LayerResult L2.",
+  "type": "object",
+  "required": ["request_id", "layers", "has_text_document"],
+  "properties": {
+    "request_id": { "type": "string" },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "allOf": [{ "$ref": "layer-result.schema.json" }],
+        "properties": { "layer": { "const": "L2" } }
+      }
+    },
+    "has_text_document": { "type": ["boolean", "null"], "description": "null bila lapis visual tidak menjawab" }
+  }
+}

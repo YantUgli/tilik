@@ -1,0 +1,16 @@
+{
+  "has_text_document": true,
+  "findings": [
+    {
+      "category": "kendaraan_tempur",
+      "description": "Kendaraan lapis baja di halaman berpagar.",
+      "confidence": "sedang",
+      "bbox": [
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  ]
+}

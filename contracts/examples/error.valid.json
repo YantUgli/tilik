@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "Caption melebihi 2.200 karakter."
+  }
+}

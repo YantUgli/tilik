@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "finding.schema.json",
+  "title": "Finding",
+  "type": "object",
+  "required": ["id", "layer", "category", "severity", "source", "message"],
+  "properties": {
+    "id":          { "type": "string", "pattern": "^[bcv]-[0-9]+$", "description": "unik per analisis; prefiks pembuat: b- browser, c- /analyze/caption, v- /analyze/visual, mis. 'c-3'" },
+    "layer":       { "enum": ["L1", "L2", "L3", "L4", "PII"] },
+    "category":    { "enum": ["gps", "waktu", "perangkat",
+                              "kop_satuan", "klasifikasi", "derajat", "surat_telegram", "blok_alamat", "kemungkinan_dokumen",
+                              "jadwal_pergerakan", "lokasi_penugasan", "politik_praktis", "provokasi", "info_pribadi",
+                              "wajah", "plat", "nomor_rumah",
+                              "kendaraan_tempur", "senjata", "papan_satuan", "gerbang_markas", "atribut_seragam"] },
+    "severity":    { "enum": ["info", "perhatian", "tinggi"] },
+    "source":      { "enum": ["exif", "rule", "llm", "vlm", "face"] },
+    "message":     { "type": "string", "description": "satu kalimat, bahasa awam" },
+    "explanation": { "type": "string", "description": "kenapa berisiko, nada membina" },
+    "rule_ref":    { "type": "string", "pattern": "^R-(L3|L4|PII)-\\d{3}$" },
+    "basis":       { "type": "string", "description": "dasar aturan, mis. 'Amanat Upacara 17 April 2024: pengamanan berita'" },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "text":   { "type": "string", "maxLength": 200 },
+        "where":  { "enum": ["caption", "ocr", "image"] },
+        "bboxes": { "type": "array", "items": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+                    "description": "[x, y, w, h] relatif 0..1 terhadap gambar asli (bukan versi 1024 px yang dikirim ke server)" }
+      }
+    },
+    "redactable":   { "type": "boolean", "default": false },
+    "experimental": { "type": "boolean", "default": false }
+  }
+}

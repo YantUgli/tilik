@@ -1,0 +1,27 @@
+{
+  "request_id": "req-c001",
+  "layers": [
+    {
+      "layer": "L2",
+      "status": "ok",
+      "provider": "fireworks",
+      "latency_ms": 2400,
+      "note": null,
+      "findings": [
+        {
+          "id": "v-1",
+          "layer": "L2",
+          "category": "kendaraan_tempur",
+          "severity": "perhatian",
+          "source": "vlm",
+          "message": "Tampak ada kendaraan tempur di foto.",
+          "explanation": "Foto kendaraan tempur dengan latar yang mudah dikenali bisa membuka lokasi satuan.",
+          "evidence": {
+            "where": "image"
+          },
+          "experimental": true
+        }
+      ]
+    }
+  ]
+}

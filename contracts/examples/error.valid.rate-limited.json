@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Terlalu banyak permintaan. Coba lagi sebentar lagi."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "llm-visual-output.schema.json",
+  "title": "LlmVisualOutput",
+  "description": "Output yang wajib dikembalikan VLM. Backend memetakannya ke Finding L2.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["has_text_document", "findings"],
+  "properties": {
+    "has_text_document": { "type": "boolean" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "description", "confidence"],
+        "properties": {
+          "category":    { "enum": ["kendaraan_tempur", "senjata", "papan_satuan", "gerbang_markas", "atribut_seragam"] },
+          "description": { "type": "string" },
+          "confidence":  { "enum": ["rendah", "sedang", "tinggi"] }
+        }
+      }
+    }
+  }
+}

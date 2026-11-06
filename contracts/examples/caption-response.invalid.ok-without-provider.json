@@ -1,0 +1,87 @@
+{
+  "request_id": "req-b004",
+  "layers": [
+    {
+      "layer": "L3",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 9,
+      "note": null,
+      "findings": [
+        {
+          "id": "c-1",
+          "layer": "L3",
+          "category": "surat_telegram",
+          "severity": "tinggi",
+          "source": "rule",
+          "rule_ref": "R-L3-003",
+          "message": "Tampak ada nomor Surat Telegram.",
+          "explanation": "Nomor Surat Telegram menandai dokumen dinas. Sebaiknya tidak ikut terfoto saat diunggah.",
+          "basis": "Amanat Upacara Bendera 17 April 2024: pengamanan berita",
+          "evidence": {
+            "text": "ST/123/2026",
+            "where": "ocr",
+            "bboxes": [
+              [
+                0.41,
+                0.12,
+                0.18,
+                0.03
+              ]
+            ]
+          },
+          "redactable": true,
+          "experimental": false
+        }
+      ]
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 4,
+      "note": null,
+      "findings": [
+        {
+          "id": "c-2",
+          "layer": "L4",
+          "category": "jadwal_pergerakan",
+          "severity": "tinggi",
+          "source": "rule",
+          "rule_ref": "R-L4-001",
+          "message": "Caption menyebut jadwal keberangkatan pasukan.",
+          "explanation": "Jadwal dan tujuan keberangkatan bisa dimanfaatkan pihak lain. Cukup ceritakan setelah kegiatan selesai.",
+          "basis": "Amanat Upacara Bendera 17 April 2024: pengamanan berita",
+          "evidence": {
+            "text": "besok subuh berangkat",
+            "where": "caption"
+          },
+          "redactable": false
+        }
+      ]
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": null,
+      "latency_ms": 1850,
+      "note": null,
+      "findings": [
+        {
+          "id": "c-3",
+          "layer": "L4",
+          "category": "lokasi_penugasan",
+          "severity": "perhatian",
+          "source": "llm",
+          "message": "Caption menyebut lokasi penugasan.",
+          "explanation": "Menyebut lokasi penugasan bisa membuka posisi satuan.",
+          "evidence": {
+            "text": "ke perbatasan bareng Yonif 999/Contoh",
+            "where": "caption"
+          },
+          "experimental": false
+        }
+      ]
+    }
+  ]
+}

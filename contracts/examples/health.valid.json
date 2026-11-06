@@ -1,0 +1,9 @@
+{
+  "status": "ok",
+  "providers": {
+    "fireworks": "ok",
+    "groq": "degraded",
+    "cloudflare": "down"
+  },
+  "version": "0.1.0"
+}
