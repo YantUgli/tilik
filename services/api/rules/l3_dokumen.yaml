@@ -1,13 +1,46 @@
-# Rule set L3: dokumen dinas dalam foto/screenshot (teks OCR).
-# T-16 hanya memuat satu aturan contoh; rule set lengkap di T-17.
+# Rule set L3: dokumen dinas dalam foto/screenshot (teks OCR). Rule set v1 (T-17).
 # Skema: contracts/rule.schema.json · Semantik: SPEC §5.5, FR-L3-*.
-# Pencocokan case-sensitive (naskah dinas menulis bagian ini dengan huruf kapital).
+# Dasar riset: docs/decisions/riset-001-naskah-dinas.md §1 dan §3.
+#
+# - Pencocokan case-sensitive (naskah dinas menulis bagian ini dengan huruf kapital);
+#   negative_context memakai (?i).
+# - Semua aturan `perhatian`. Kenaikan ke `tinggi` hanya lewat combine_l3 (FR-L3-05):
+#   >= 1 sinyal `specific` dan temuan dari >= 2 aturan L3 berbeda.
+# - negative_context mematikan aturan bila cocok di mana pun dalam teks OCR, jadi
+#   selalu berupa FRASA, tidak pernah satu kata.
+# - Di pola multibaris dipakai [ \t]* (bukan \s*) supaya jarak baris tidak melar.
+# - Semua nama satuan dan nomor di contoh fiktif.
+
+- id: R-L3-001
+  layer: L3
+  category: kop_satuan
+  severity: perhatian
+  signal: specific
+  applies_to: [ocr]
+  match:
+    any_regex:
+      # Dua baris kop satuan militer dalam <= 3 baris (FR-L3-01).
+      - '^[ \t]*(MARKAS BESAR|MABES|KOMANDO DAERAH MILITER|KODAM|KOMANDO RESOR MILITER|KOREM|KOMANDO DISTRIK MILITER|KODIM|BATALYON|YONIF|DETASEMEN|KOMANDO RAYON MILITER|KORAMIL)\b.*\n(?:.*\n){0,2}[ \t]*(MARKAS BESAR|MABES|KOMANDO DAERAH MILITER|KODAM|KOMANDO RESOR MILITER|KOREM|KOMANDO DISTRIK MILITER|KODIM|BATALYON|YONIF|DETASEMEN|KOMANDO RAYON MILITER|KORAMIL)\b'
+  redact: matched_words
+  message: "Tampak ada kop surat satuan militer."
+  explanation: "Kop satuan menandakan foto ini memuat dokumen dinas. Dokumen dinas tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto atau screenshot grup."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+  tests:
+    positive:
+      - "KOMANDO DAERAH MILITER IX/CONTOH\nKOMANDO DISTRIK MILITER 9999/FIKTIF"
+      - "KODAM IX/CONTOH\nKOREM 999/FIKTIF\nKODIM 9999/CONTOH"
+      - "  BATALYON INFANTERI 999/CONTOH\n\nDETASEMEN FIKTIF"
+    negative:
+      - "PEMERINTAH KABUPATEN CONTOH\nKECAMATAN FIKTIF"
+      - "KODIM"
+      - "KODAM IX/CONTOH\nBAGIAN UMUM\nSUBBAGIAN ARSIP\nSEKSI DATA\nKODIM 9999/FIKTIF"
+      - "Kodam IX/Contoh\nKodim 9999/Fiktif"
 
 - id: R-L3-002
   layer: L3
   category: klasifikasi
   severity: perhatian            # dinaikkan ke tinggi hanya lewat FR-L3-05 (combine_l3)
-  signal: generic
+  signal: generic                # kata klasifikasi juga dipakai naskah kampus/pemda (riset §1.4)
   applies_to: [ocr]
   match:
     any_regex:
@@ -15,16 +48,186 @@
     require_context:
       - '\b(KLASIFIKASI|NOMOR|NO\.|KEPADA|DARI|TEMBUSAN|PERIHAL|DERAJAT)\b'
     negative_context:
-      - '(?i)resep|rahasia (umum|dapur|sukses|kecantikan|kita)|edisi terbatas|stok terbatas|kuota terbatas'
+      - '(?i)\bresep rahasia\b|\brahasia (umum|dapur|sukses|kecantikan|kita)\b|\b(edisi|stok|kuota) terbatas\b'
   redact: matched_words
   message: "Tampak ada tanda klasifikasi dokumen."
-  explanation: "Dokumen bertanda klasifikasi tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto."
-  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): pengamanan berita"
+  explanation: "Dokumen bertanda klasifikasi tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto atau screenshot grup."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
   tests:
     positive:
       - "KLASIFIKASI : RAHASIA\nNOMOR : ST/12/2026"
       - "PERIHAL : LAPORAN\nKLASIFIKASI : TERBATAS"
+      - "KLASIFIKASI : SANGAT RAHASIA"
+      # kata penyusun negative_context ada, tetapi tidak membentuk frasanya
+      - "KLASIFIKASI : RAHASIA\nLampiran resep dinas"
+      - "KLASIFIKASI : RAHASIA\nPERIHAL : RAPAT UMUM, DAPUR UMUM, KIAT SUKSES KITA"
+      - "KLASIFIKASI : TERBATAS\nPERIHAL : EDISI REVISI STOK DAN KUOTA"
     negative:
       - "resep rahasia ayam goreng"
       - "EDISI TERBATAS"
       - "RAHASIA"
+      - "PERIHAL : PROMO\nSTOK TERBATAS"
+      - "RAHASIA SUKSES KITA\nKEPADA : PELANGGAN"
+
+- id: R-L3-003
+  layer: L3
+  category: klasifikasi
+  severity: perhatian
+  signal: specific               # kode klasifikasi pada nomor (Permenhan 4/2012, riset §1.2)
+  applies_to: [ocr]
+  match:
+    any_regex:
+      - '\b(SR|R)\s*/\s*(?:ST\s*/\s*)?\d{1,5}\s*/\s*(?:[IVX]{1,4}\s*/\s*)?(?:19|20)\d{2}\b'
+    require_context:
+      - '\b(NOMOR|NO\.)'
+  redact: matched_words
+  message: "Tampak ada nomor surat berkode klasifikasi rahasia."
+  explanation: "Kode R atau SR pada nomor surat menandakan dokumen rahasia. Dokumen seperti ini tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+  tests:
+    positive:
+      - "NOMOR R/123/X/2026"
+      - "NOMOR : SR/ST/45/2026"
+      - "NO. R / 7 / 2026"
+    negative:
+      - "NOMOR 005/123/2026"
+      - "R/RW 003/005"
+      - "LANTAI R/12/2026"
+      - "NOMOR : B/123/2026"
+
+- id: R-L3-004
+  layer: L3
+  category: surat_telegram
+  severity: perhatian
+  signal: specific
+  applies_to: [ocr]
+  match:
+    any_regex:
+      - '\bSURAT\s+TELEGRAM\b'
+      - '^[ \t]*TELEGRAM[ \t]*$'
+    negative_context:
+      - '(?i)\b(aplikasi|grup|channel) telegram\b|\bt\.me/'
+  redact: matched_words
+  message: "Tampak ada judul Surat Telegram."
+  explanation: "Surat Telegram adalah naskah dinas. Isinya tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto atau screenshot grup."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+  tests:
+    positive:
+      - "SURAT TELEGRAM"
+      - "TELEGRAM\nNOMOR : ST/12/2026"
+      # kata penyusun negative_context ada, tetapi tidak membentuk frasanya
+      - "SURAT TELEGRAM\nDIKIRIM KE GRUP KOMANDO LEWAT APLIKASI RESMI"
+      - "  TELEGRAM\nCHANNEL RADIO 2"
+    negative:
+      - "Gabung grup Telegram kami"
+      - "aplikasi Telegram error"
+      - "Surat telegram"
+      - "TELEGRAM\nt.me/contoh"
+
+- id: R-L3-005
+  layer: L3
+  category: surat_telegram
+  severity: perhatian
+  signal: specific
+  applies_to: [ocr]
+  match:
+    any_regex:
+      # Bentuk TNI (ST/1192/2025, TR/442/2025) dan Polri (ST/750/IV/HUM.3.4.5./2021).
+      - '\b(STR|ST|TR)\s*/\s*\d{1,5}\s*/\s*(?:[IVX]{1,4}\s*/\s*)?(?:[A-Z][A-Z0-9.]*\s*/\s*)?(?:19|20)\d{2}\b'
+  redact: matched_words
+  message: "Tampak ada nomor Surat Telegram."
+  explanation: "Nomor ST/TR menandakan foto ini memuat Surat Telegram. Isinya tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto atau screenshot grup."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+  tests:
+    positive:
+      - "NOMOR : ST/123/2026"
+      - "TR/45/2026"
+      - "ST/88/XI/OPS.2./2026"
+      - "STR/99/X/PAM.9.9./2026"
+    negative:
+      - "LAST/12/2026"
+      - "RT/RW 003/005/2026"
+      - "ST 12"
+      - "ST/123/26"
+
+- id: R-L3-006
+  layer: L3
+  category: blok_alamat
+  severity: perhatian
+  signal: generic                # blok alamat juga dipakai naskah sipil (riset §1.4)
+  applies_to: [ocr]
+  match:
+    any_regex:
+      # Dua label alamat BERBEDA di awal baris dalam <= 6 baris (FR-L3-04).
+      - '^[ \t]*(DARI|KEPADA|TEMBUSAN)[ \t]*[:.].*\n(?:.*\n){0,5}[ \t]*(?!\1)(DARI|KEPADA|TEMBUSAN)[ \t]*[:.]'
+  redact: matched_words
+  message: "Tampak ada blok alamat surat dinas (Dari/Kepada/Tembusan)."
+  explanation: "Blok Dari/Kepada/Tembusan adalah ciri naskah dinas. Bila ini dokumen kedinasan, jangan disebarkan, termasuk sebagai latar foto."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+  tests:
+    positive:
+      - "DARI : DANDIM 9999/CONTOH\nKEPADA : DANRAMIL"
+      - "KEPADA : DANSATGAS FIKTIF\nPERIHAL : LAPORAN\nTEMBUSAN : ARSIP"
+      - "  TEMBUSAN. ARSIP\nDARI. KASDIM"
+    negative:
+      - "Kepada Yth. Bapak/Ibu"
+      - "KEPADA : DANRAMIL\nKEPADA : DANSATGAS"
+      - "DARI : DANDIM 9999/CONTOH"
+      - "KEPADA YTH.\nDARI KAMI"
+
+- id: R-L3-007
+  layer: L3
+  category: derajat
+  severity: perhatian
+  signal: generic                # derajat juga dipakai naskah sipil (riset §1.4)
+  applies_to: [ocr]
+  match:
+    any_regex:
+      - '\b(KILAT|SANGAT\s+SEGERA|SEGERA)\b'
+    require_context:
+      - '\b(DERAJAT|KLASIFIKASI|NOMOR)\b'
+    negative_context:
+      - '(?i)\bsegera (daftar|pesan|habis)\b|\bsegera hadir di kota\b|\b(promo|diskon) kilat\b|\bkilat khusus\b'
+  redact: matched_words
+  message: "Tampak ada tanda derajat surat (Kilat/Segera)."
+  explanation: "Tanda derajat adalah ciri naskah dinas. Bila ini dokumen kedinasan, jangan disebarkan, termasuk sebagai latar foto."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+  tests:
+    positive:
+      - "DERAJAT : KILAT"
+      - "DERAJAT : SANGAT SEGERA\nKLASIFIKASI : RAHASIA"
+      # kata penyusun negative_context ada, tetapi tidak membentuk frasanya
+      - "DERAJAT : KILAT\nKHUSUS UNTUK DANRAMIL"
+      - "DERAJAT : SEGERA\nDAFTAR HADIR TERLAMPIR"
+      - "DERAJAT : SEGERA\nPERIHAL : PROMO DAN DISKON KOPERASI"
+      - "DERAJAT : SEGERA\nAGAR SEGERA HADIR DI MAKODIM"
+    negative:
+      - "SEGERA HADIR DI KOTA ANDA"
+      - "PROMO KILAT!\nNOMOR WA DI BAWAH"
+      - "NOMOR RESI : 12345\nPAKET KILAT KHUSUS"
+      - "SEGERA DAFTAR!\nNOMOR PESERTA TERBATAS"
+      - "KILAT"
+
+- id: R-L3-008
+  layer: L3
+  category: surat_telegram
+  severity: perhatian
+  signal: generic                # sinyal lemah (riset §1.3)
+  applies_to: [ocr]
+  match:
+    any_regex:
+      # Gaya telegram: tanda baca dieja (TTK = titik, KMA = koma), minimal 3 kali.
+      - '(?s)\b(?:TTK|KMA)\b.{0,2000}?\b(?:TTK|KMA)\b.{0,2000}?\b(?:TTK|KMA)\b'
+  # Tanpa redact: rentang kecocokan bisa mencakup seluruh isi surat; kata kunci
+  # lain (judul, nomor, klasifikasi) sudah ditandai aturan masing-masing.
+  message: "Tampak ada teks bergaya telegram (TTK/KMA)."
+  explanation: "Tanda baca yang dieja seperti TTK dan KMA biasa dipakai di Surat Telegram. Bila ini dokumen kedinasan, jangan disebarkan, termasuk sebagai latar foto."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita. Pola diamati pada ST Polri; untuk TNI belum terverifikasi"
+  tests:
+    positive:
+      - "SESUAI REF DI ATAS KMA DISAMPAIKAN BAHWA TTK\nDUA KMA LAKSANAKAN TTK"
+      - "A KMA B TTK C KMA"
+    negative:
+      - "KMA"
+      - "TTK TTK"
+      - "TTKA KMAX TTKB"

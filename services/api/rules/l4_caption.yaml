@@ -1,6 +1,138 @@
-# Rule set L4: caption/teks berisiko. Semua aturan L4 memberi `perhatian`;
-# LLM boleh menaikkan ke `tinggi`, risiko akhir = maksimum (FR-RISK-02).
-# T-16 hanya memuat satu aturan contoh; rule set lengkap di T-17.
+# Rule set L4: caption/teks berisiko. Rule set v1 (T-17).
+# Skema: contracts/rule.schema.json · Semantik: SPEC §5.5, FR-L4-*.
+#
+# - Semua aturan L4 memberi `perhatian`; LLM boleh menaikkan ke `tinggi`, risiko
+#   akhir = maksimum (FR-RISK-02).
+# - Pencocokan case-insensitive: setiap regex diawali (?i).
+# - negative_context mematikan aturan bila cocok di mana pun dalam teks sumber yang
+#   sama, jadi selalu berupa FRASA, tidak pernah satu kata.
+# - `provokasi` sengaja tidak punya aturan di v1 (risiko false positive dan SARA);
+#   diserahkan ke LLM.
+# - Semua satuan, tokoh, partai, dan nomor di contoh fiktif.
+
+- id: R-L4-001
+  layer: L4
+  category: jadwal_pergerakan
+  severity: perhatian
+  applies_to: [caption, ocr]
+  match:
+    any_regex:
+      - '(?i)\b(berangkat|bergerak|geser|pergeseran|pemberangkatan|kepulangan|tiba|kumpul|apel)\b'
+    require_context:
+      - '(?i)\b(satgas|yonif|batalyon|kompi|peleton|pasukan|satuan|penugasan|pamtas|operasi|rotasi)\b'
+    negative_context:
+      - '(?i)\bberangkat (ke )?(sekolah|kuliah|kerja|kantor|mudik|liburan)\b|\bkumpul (keluarga|arisan|reuni)\b'
+  message: "Caption menyebut jadwal pergerakan satuan."
+  explanation: "Jadwal keberangkatan atau kepulangan satuan bisa dimanfaatkan pihak yang tidak berhak. Sebaiknya kabar seperti ini dibagikan setelah satuan tiba dengan aman."
+  basis: "Prinsip pengamanan berita (Amanat Upacara Bendera 17 April 2024)"
+  tests:
+    positive:
+      - "Satgas Yonif 999/Contoh berangkat tanggal 12 dari pelabuhan, doakan ya"
+      - "Besok apel pemberangkatan pasukan jam 06.00"
+      # kata penyusun negative_context ada, tetapi tidak membentuk frasanya
+      - "Ayah berangkat penugasan besok pagi. Adik juga mulai sekolah"
+      - "Kumpul di batalyon jam 05.00, keluarga boleh antar"
+    negative:
+      - "Besok berangkat sekolah jam 6, pasukan semut di dapur"
+      - "Akhirnya kumpul keluarga lagi setelah rotasi kerja"
+      - "Berangkat liburan ke pantai!"
+      - "Satgas Yonif 999/Contoh hebat"
+
+- id: R-L4-002
+  layer: L4
+  category: lokasi_penugasan
+  severity: perhatian
+  applies_to: [caption, ocr]
+  match:
+    any_regex:
+      - '(?i)\b(pos|posko|markas|mako|basecamp|base camp)\b'
+    require_context:
+      - '(?i)\b(satgas|penugasan|pamtas|operasi|yonif|tugas di)\b'
+    negative_context:
+      - '(?i)\bpos (ronda|satpam|kamling|indonesia)\b'
+  message: "Caption menyebut lokasi pos atau markas penugasan."
+  explanation: "Lokasi pos atau markas satuan yang sedang bertugas bisa dimanfaatkan pihak yang tidak berhak."
+  basis: "Prinsip pengamanan berita (Amanat Upacara Bendera 17 April 2024)"
+  tests:
+    positive:
+      - "Salam dari pos satgas pamtas"
+      - "Ayah tugas di markas, kangen"
+      # kata penyusun negative_context ada, tetapi tidak membentuk frasanya
+      - "Tugas di pos satgas, malam ini giliran ronda"
+      - "Paket untuk ayah di posko penugasan, kurir Indonesia timur"
+    negative:
+      - "Bapak tugas di pos satpam kompleks"
+      - "Ronda di pos kamling bareng tetangga, operasi semut"
+      - "Kirim lewat pos ya"
+      - "Markas klub futsal kami"
+
+- id: R-L4-003
+  layer: L4
+  category: lokasi_penugasan
+  severity: perhatian
+  applies_to: [caption, ocr]
+  match:
+    any_regex:
+      # Koordinat desimal lintang, bujur (titik atau koma desimal).
+      - '-?\d{1,2}[.,]\d{4,}\s*[,;]\s*-?\d{1,3}[.,]\d{4,}'
+  message: "Ada koordinat lokasi di teks."
+  explanation: "Koordinat menunjukkan lokasi persis dan bisa dimanfaatkan pihak yang tidak berhak."
+  basis: "Prinsip pengamanan berita (Amanat Upacara Bendera 17 April 2024)"
+  tests:
+    positive:
+      - "share loc -6.175392, 106.827153"
+      - "titik kumpul -2,5489; 140,7181"
+    negative:
+      - "Harga Rp 15.000, 25.000"
+      - "jam 07.30, 08.45"
+      - "skor 3-1, 2-0"
+
+- id: R-L4-004
+  layer: L4
+  category: politik_praktis
+  severity: perhatian
+  applies_to: [caption, ocr]
+  match:
+    any_regex:
+      - '(?i)\b(coblos|nyoblos|contreng|pilih|dukung|menangkan)\b.{0,40}\b(no(mor)?\.?\s*urut|paslon|capres|cawapres|caleg|cagub|cabup|cawalkot|partai)\b'
+    negative_context:
+      - '(?i)\b(pilih menu|pilih kasih|dukung timnas)\b|\bpartai (final|semifinal|puncak|perdana|pembuka)\b'
+  message: "Caption berisi ajakan memilih atau mendukung kontestan pemilu."
+  explanation: "Ajakan memilih kontestan pemilu termasuk politik praktis yang dilarang bagi prajurit. Larangan ini berlaku bagi prajurit, tetapi unggahan keluarga sering dikaitkan dengan anggota yang berdinas."
+  basis: "UU 34/2004 tentang TNI, Pasal 39 angka 2 (larangan politik praktis bagi prajurit; tidak diubah UU 3/2025)"
+  tests:
+    positive:
+      - "Jangan lupa coblos nomor urut 9 ya!"
+      - "Ayo dukung paslon Fiktif-Contoh"
+      # kata penyusun negative_context ada, tetapi tidak membentuk frasanya
+      - "Dukung partai Contoh Sejahtera, sambil nonton timnas"
+      - "Pilih caleg no. urut 9 ya, habis itu makan, menunya bebas"
+      - "Menangkan paslon nomor urut 9 sampai final!"
+    negative:
+      - "Dukung timnas di partai final!"
+      - "Pilih kasih itu nggak baik"
+      - "Pilih menu nomor urut 3 di daftar"
+      - "Ayo pilih baju buat lebaran"
+
+- id: R-L4-005
+  layer: L4
+  category: politik_praktis
+  severity: perhatian
+  applies_to: [caption, ocr]
+  match:
+    any_regex:
+      - '(?i)\b(quick\s*count|hitung cepat|real\s*count)\b'
+  message: "Caption menyebut hasil hitung cepat pemilu."
+  explanation: "Mengunggah atau menanggapi hasil hitung cepat termasuk yang diminta untuk dihindari prajurit. Unggahan keluarga juga sering dikaitkan dengan anggota yang berdinas."
+  basis: "Arahan netralitas Panglima TNI untuk Pemilu 2024 (diberitakan media, Nov 2023)"
+  tests:
+    positive:
+      - "Hasil quick count sudah keluar!"
+      - "update realcount hari ini"
+      - "Hitung cepat lembaga fiktif"
+    negative:
+      - "Ayo hitung mundur tahun baru"
+      - "count down sebentar lagi"
 
 - id: R-L4-006
   layer: L4
@@ -19,3 +151,24 @@
     negative:
       - "kode pos 12345"
       - "nomor 0812345"
+
+- id: R-L4-007
+  layer: L4
+  category: info_pribadi
+  severity: perhatian
+  applies_to: [caption, ocr]
+  match:
+    any_regex:
+      - '(?<!\d)\d{16}(?!\d)'
+    require_context:
+      - '(?i)\b(nik|ktp|nomor induk)\b'
+  message: "Ada NIK di teks."
+  explanation: "NIK di unggahan publik membuka risiko penipuan dan doxxing."
+  tests:
+    positive:
+      - "NIK: 9999010101010001"
+      - "Ini foto KTP baru\n9999010101010001"
+    negative:
+      - "NIK 12345"
+      - "no rekening 9999010101010001"
+      - "NIK: 99990101010100012"
