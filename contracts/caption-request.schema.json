@@ -18,7 +18,7 @@
     "ocr_words": {
       "type": ["array", "null"],
       "maxItems": 2000,
-      "description": "Opsional (FR-OCR-02, FR-L3-08). Kata OCR dengan urutan yang sama dengan ocr_text. Server memakainya untuk aturan: kata ber-conf < 50 diabaikan dan bbox kata yang cocok diisi ke evidence.bboxes (dikonversi ke [x, y, w, h]). Bila kata tidak sejajar dengan ocr_text, server membangun ulang teks untuk aturan dari kata ber-conf cukup, dipisah spasi (lihat rules_engine _prepare_ocr). Tidak dikirim ke LLM.",
+      "description": "Opsional (FR-OCR-02, FR-L3-08). Kata OCR dengan urutan yang sama dengan ocr_text. Server memakainya untuk aturan: kata ber-conf < 50 diabaikan dan bbox kata yang cocok diisi ke evidence.bboxes (dikonversi ke [x, y, w, h]). Bila kata tidak sejajar dengan ocr_text, server membangun ulang teks untuk aturan dari kata ber-conf cukup, dipisah spasi (lihat rules_engine _prepare_ocr). Bila ocr_text dipotong, kata setelah titik potong diabaikan untuk aturan. Tidak dikirim ke LLM.",
       "items": { "$ref": "#/$defs/OcrWord" }
     },
     "lang": { "const": "id" }
