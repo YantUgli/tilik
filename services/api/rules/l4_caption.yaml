@@ -1,0 +1,21 @@
+# Rule set L4: caption/teks berisiko. Semua aturan L4 memberi `perhatian`;
+# LLM boleh menaikkan ke `tinggi`, risiko akhir = maksimum (FR-RISK-02).
+# T-16 hanya memuat satu aturan contoh; rule set lengkap di T-17.
+
+- id: R-L4-006
+  layer: L4
+  category: info_pribadi
+  severity: perhatian
+  applies_to: [caption, ocr]
+  match:
+    any_regex:
+      - '(?<!\d)(?:\+62|62|0)8\d{8,11}(?!\d)'
+  message: "Ada nomor HP di teks."
+  explanation: "Nomor HP di unggahan publik membuka risiko penipuan dan doxxing."
+  tests:
+    positive:
+      - "info lebih lanjut wa 081234567890"
+      - "hubungi +6281234567890 ya"
+    negative:
+      - "kode pos 12345"
+      - "nomor 0812345"

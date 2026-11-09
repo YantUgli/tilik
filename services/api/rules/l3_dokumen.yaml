@@ -1,0 +1,30 @@
+# Rule set L3: dokumen dinas dalam foto/screenshot (teks OCR).
+# T-16 hanya memuat satu aturan contoh; rule set lengkap di T-17.
+# Skema: contracts/rule.schema.json · Semantik: SPEC §5.5, FR-L3-*.
+# Pencocokan case-sensitive (naskah dinas menulis bagian ini dengan huruf kapital).
+
+- id: R-L3-002
+  layer: L3
+  category: klasifikasi
+  severity: perhatian            # dinaikkan ke tinggi hanya lewat FR-L3-05 (combine_l3)
+  signal: generic
+  applies_to: [ocr]
+  match:
+    any_regex:
+      - '\b(SANGAT\s+RAHASIA|RAHASIA|TERBATAS|KONFIDENSIAL)\b'
+    require_context:
+      - '\b(KLASIFIKASI|NOMOR|NO\.|KEPADA|DARI|TEMBUSAN|PERIHAL|DERAJAT)\b'
+    negative_context:
+      - '(?i)resep|rahasia (umum|dapur|sukses|kecantikan|kita)|edisi terbatas|stok terbatas|kuota terbatas'
+  redact: matched_words
+  message: "Tampak ada tanda klasifikasi dokumen."
+  explanation: "Dokumen bertanda klasifikasi tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto."
+  basis: "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): pengamanan berita"
+  tests:
+    positive:
+      - "KLASIFIKASI : RAHASIA\nNOMOR : ST/12/2026"
+      - "PERIHAL : LAPORAN\nKLASIFIKASI : TERBATAS"
+    negative:
+      - "resep rahasia ayam goreng"
+      - "EDISI TERBATAS"
+      - "RAHASIA"
