@@ -1,0 +1,31 @@
+{
+  "name": "tilik-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "sync-contracts": "node scripts/sync-contracts.mjs",
+    "build": "node scripts/sync-contracts.mjs && next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "next": "16.4.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0"
+  }
+}

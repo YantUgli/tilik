@@ -1,0 +1,32 @@
+{
+  "$comment": "JANGAN DIEDIT: hasil sync dari contracts/health.schema.json lewat `pnpm sync-contracts`. Ubah sumbernya di contracts/, lalu jalankan ulang sync.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "health.schema.json",
+  "title": "HealthResponse",
+  "description": "Respons 200 GET /health.",
+  "type": "object",
+  "required": [
+    "status",
+    "providers",
+    "version"
+  ],
+  "properties": {
+    "status": {
+      "const": "ok"
+    },
+    "providers": {
+      "type": "object",
+      "description": "nama provider -> status, mis. {\"fireworks\": \"ok\"}",
+      "additionalProperties": {
+        "enum": [
+          "ok",
+          "degraded",
+          "down"
+        ]
+      }
+    },
+    "version": {
+      "type": "string"
+    }
+  }
+}
