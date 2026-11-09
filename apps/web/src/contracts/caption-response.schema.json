@@ -1,0 +1,119 @@
+{
+  "$comment": "JANGAN DIEDIT: hasil sync dari contracts/caption-response.schema.json lewat `pnpm sync-contracts`. Ubah sumbernya di contracts/, lalu jalankan ulang sync.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "caption-response.schema.json",
+  "title": "CaptionResponse",
+  "description": "Respons 200 POST /analyze/caption. layers selalu tepat tiga, berurutan: L3 aturan, L4 aturan, L4 LLM. Kegagalan LLM hanya mengubah status elemen ketiga. Bila caption dan ocr_text sama-sama kosong (null, string kosong, atau hanya spasi): L3 dan L4 aturan ok dengan findings kosong, L4 LLM skipped.",
+  "type": "object",
+  "required": [
+    "request_id",
+    "layers"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string"
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": false,
+      "prefixItems": [
+        {
+          "description": "L3, provider rule",
+          "allOf": [
+            {
+              "$ref": "layer-result.schema.json"
+            }
+          ],
+          "properties": {
+            "layer": {
+              "const": "L3"
+            },
+            "provider": {
+              "const": "rule"
+            }
+          }
+        },
+        {
+          "description": "L4, provider rule",
+          "allOf": [
+            {
+              "$ref": "layer-result.schema.json"
+            }
+          ],
+          "properties": {
+            "layer": {
+              "const": "L4"
+            },
+            "provider": {
+              "const": "rule"
+            }
+          }
+        },
+        {
+          "description": "L4, provider = provider LLM yang menjawab. ok: wajib nama provider. skipped/unavailable: null. error: nama provider, atau null bila gagal sebelum ada provider yang menjawab.",
+          "allOf": [
+            {
+              "$ref": "layer-result.schema.json"
+            },
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "skipped",
+                      "unavailable"
+                    ]
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "provider": {
+                    "const": null
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "ok"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "provider": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "layer": {
+              "const": "L4"
+            },
+            "provider": {
+              "not": {
+                "enum": [
+                  "rule",
+                  "browser"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

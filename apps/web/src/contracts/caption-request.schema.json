@@ -1,0 +1,77 @@
+{
+  "$comment": "JANGAN DIEDIT: hasil sync dari contracts/caption-request.schema.json lewat `pnpm sync-contracts`. Ubah sumbernya di contracts/, lalu jalankan ulang sync.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "caption-request.schema.json",
+  "title": "CaptionRequest",
+  "description": "Body JSON POST /analyze/caption. Bila caption dan ocr_text sama-sama kosong (null, string kosong, atau hanya spasi), respons tetap 200: L3 dan L4 aturan ok dengan findings kosong, L4 LLM skipped dengan provider null. caption, ocr_text, dan ocr_words diperlakukan sebagai data tak tepercaya.",
+  "type": "object",
+  "required": [
+    "caption",
+    "ocr_text",
+    "lang"
+  ],
+  "properties": {
+    "caption": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2200,
+      "description": "Lebih dari 2.200 karakter ditolak dengan 400 INVALID_INPUT."
+    },
+    "ocr_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Teks OCR gabungan, baris dipisah \\n. Lebih dari 8.000 karakter dipotong (bukan ditolak); note di LayerResult diisi. Teks utuh ini yang dikirim ke LLM."
+    },
+    "ocr_words": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "maxItems": 2000,
+      "description": "Opsional (FR-OCR-02, FR-L3-08). Kata OCR dengan urutan yang sama dengan ocr_text. Server memakainya untuk aturan: kata ber-conf < 50 diabaikan dan bbox kata yang cocok diisi ke evidence.bboxes (dikonversi ke [x, y, w, h]). Bila kata tidak sejajar dengan ocr_text, server membangun ulang teks untuk aturan dari kata ber-conf cukup, dipisah spasi (lihat rules_engine _prepare_ocr). Bila ocr_text dipotong, kata setelah titik potong diabaikan untuk aturan. Tidak dikirim ke LLM.",
+      "items": {
+        "$ref": "#/$defs/OcrWord"
+      }
+    },
+    "lang": {
+      "const": "id"
+    }
+  },
+  "$defs": {
+    "OcrWord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "conf",
+        "bbox"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "conf": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "bbox": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "description": "[x0, y0, x1, y1] relatif 0..1 terhadap gambar asli (bentuk bbox Tesseract.js setelah dinormalisasi). x1 >= x0 dan y1 >= y0 tidak bisa diungkapkan di skema; kata yang melanggar tetap dipakai untuk teks, tetapi bbox-nya dibuang server."
+        }
+      }
+    }
+  }
+}

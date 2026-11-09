@@ -1,0 +1,111 @@
+{
+  "$comment": "JANGAN DIEDIT: hasil sync dari contracts/visual-response.schema.json lewat `pnpm sync-contracts`. Ubah sumbernya di contracts/, lalu jalankan ulang sync.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "visual-response.schema.json",
+  "title": "VisualResponse",
+  "description": "Respons 200 POST /analyze/visual. layers berisi satu LayerResult L2. Temuan L2 wajib experimental: true dan severity maksimal perhatian.",
+  "type": "object",
+  "required": [
+    "request_id",
+    "layers",
+    "has_text_document"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string"
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "layer-result.schema.json"
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "skipped",
+                    "unavailable"
+                  ]
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "provider": {
+                  "const": null
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "ok"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "layer": {
+            "const": "L2"
+          },
+          "provider": {
+            "not": {
+              "enum": [
+                "rule",
+                "browser"
+              ]
+            },
+            "description": "provider VLM yang menjawab. ok: wajib nama provider. skipped/unavailable: null. error: nama provider, atau null bila gagal sebelum ada provider yang menjawab."
+          },
+          "findings": {
+            "items": {
+              "description": "temuan L2 selalu eksperimental dan maksimal perhatian (FR-L2-02)",
+              "required": [
+                "experimental"
+              ],
+              "properties": {
+                "experimental": {
+                  "const": true
+                },
+                "severity": {
+                  "enum": [
+                    "info",
+                    "perhatian"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "has_text_document": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "null bila lapis visual tidak menjawab"
+    }
+  }
+}

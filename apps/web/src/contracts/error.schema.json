@@ -1,0 +1,33 @@
+{
+  "$comment": "JANGAN DIEDIT: hasil sync dari contracts/error.schema.json lewat `pnpm sync-contracts`. Ubah sumbernya di contracts/, lalu jalankan ulang sync.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "error.schema.json",
+  "title": "ErrorResponse",
+  "description": "Status HTTP: 429 RATE_LIMITED, 400 INVALID_INPUT, 503 PROVIDER_UNAVAILABLE, 500 INTERNAL.",
+  "type": "object",
+  "required": [
+    "error"
+  ],
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "RATE_LIMITED",
+            "INVALID_INPUT",
+            "PROVIDER_UNAVAILABLE",
+            "INTERNAL"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

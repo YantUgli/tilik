@@ -1,0 +1,73 @@
+{
+  "$comment": "JANGAN DIEDIT: hasil sync dari contracts/analysis-result.schema.json lewat `pnpm sync-contracts`. Ubah sumbernya di contracts/, lalu jalankan ulang sync.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "analysis-result.schema.json",
+  "title": "AnalysisResult",
+  "description": "Dirakit di browser dari hasil lokal dan dua respons server. Galeri precomputed memakai bentuk yang sama dengan mode precomputed.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request_id",
+    "mode",
+    "layers",
+    "has_text_document",
+    "risk"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "demo",
+        "selfhosted",
+        "precomputed"
+      ]
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "layer-result.schema.json"
+      }
+    },
+    "has_text_document": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "risk": {
+      "type": "object",
+      "required": [
+        "level",
+        "incomplete",
+        "top_reasons"
+      ],
+      "properties": {
+        "level": {
+          "enum": [
+            "aman",
+            "perhatian",
+            "tinggi"
+          ],
+          "description": "tingkat tertinggi dari semua severity (info dihitung aman)"
+        },
+        "incomplete": {
+          "type": "boolean",
+          "description": "true bila ada LayerResult berstatus unavailable atau error"
+        },
+        "top_reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "finding.schema.json#/properties/id"
+          },
+          "description": "id Finding yang ada di AnalysisResult yang sama"
+        }
+      }
+    }
+  }
+}
