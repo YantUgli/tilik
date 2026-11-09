@@ -130,6 +130,7 @@ def test_kata_lepas_tidak_mematikan_aturan():
 
 @pytest.mark.parametrize("nomor", [
     "081234567890", "0812-3456-7890", "0812 3456 7890", "+62 812-3456-7890", "62.812.3456.7890",
+    "0812-345-678-901", "0812345678901",
 ])
 def test_hp_berpemisah_evidence_utuh(nomor):
     found = ENGINE.run(RuleInput(caption=f"wa {nomor} ya", ocr_text=None, ocr_words=None))

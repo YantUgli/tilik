@@ -145,8 +145,18 @@
   applies_to: [caption, ocr]
   match:
     any_regex:
-      # 8-11 digit setelah `8`; boleh satu pemisah (strip, titik, spasi) di antara digit.
-      - '(?<!\d)(?:\+62[-. ]?|62[-. ]?|0)8(?:[-. ]?\d){8,11}(?!\d)'
+      # Prefiks (+62/62 dengan satu pemisah opsional, atau 0), lalu kelompok pertama
+      # `8` + 2-3 digit tanpa pemisah (812, 8123), lalu kelompok 3-4 digit yang dipisah
+      # paling banyak satu karakter (strip, titik, spasi) atau tanpa pemisah.
+      # Total digit setelah `8` = 8-11, yang hanya mungkin dengan:
+      #   - dua kelompok lanjutan: 2+3+3 = 8 s.d. 3+4+4 = 11 (semua kombinasi sah), atau
+      #   - tiga kelompok lanjutan, semuanya terpendek: 2+3+3+3 = 11.
+      # Bentuk tiga kelompok dicoba lebih dulu supaya 0812-345-678-901 tertangkap utuh.
+      # Kelompok pertama tanpa pemisah membuat tanggal+jam (08-12-2026 10.30,
+      # 08.12.2026 10.00) tidak tertangkap.
+      # Keputusan sadar: nomor berkelompok 2 digit (0812 34 56 78 90) TIDAK tertangkap,
+      # karena pola itu tidak bisa dibedakan dari deretan tanggal/skor (08 12 20 26 10).
+      - '(?<!\d)(?:\+62[-. ]?|62[-. ]?|0)8(?:\d{2}(?:[-. ]?\d{3}){3}|\d{2,3}(?:[-. ]?\d{3,4}){2})(?!\d)'
   message: "Ada nomor HP di teks."
   explanation: "Nomor HP di unggahan publik membuka risiko penipuan dan doxxing."
   tests:
@@ -164,6 +174,10 @@
       - "jam 08.30 - 10.00"
       - "skor 0 8 1 2"
       - "0812--3456--7890"
+      - "tanggal 08.12.2026 10.00"
+      - "08-12-2026 10.30 WIB"
+      - "08-08-2026 08.00"
+      - "skor 08 12 20 26 10"
 
 - id: R-L4-007
   layer: L4
