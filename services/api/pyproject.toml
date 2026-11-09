@@ -3,14 +3,16 @@ name = "tilik-api"
 version = "0.1.0"
 description = "TILIK API: rule engine dan analisis caption/visual"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pyyaml>=6",
+]
 
 [dependency-groups]
 dev = [
     "jsonschema>=4.23",
     "pytest>=8",
-    "pyyaml>=6",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
