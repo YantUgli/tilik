@@ -1,0 +1,67 @@
+{%- import "_macros.html.j2" as m -%}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>{{ item_id }}</title>
+<style>
+:root { --fs: {{ '%.2f' | format(fs * scale) }}px; --mx: {{ mx }}px; --mt: {{ mt }}px; --font: "{{ font }}"; }
+{% include "css/base.css" %}
+{% include "css/" ~ layout ~ ".css" %}
+</style>
+</head>
+<body>
+<div class="page">
+<div id="doc" class="doc {{ layout }}">
+{% block doc %}{% endblock %}
+{{ m.ln({'t': 'DOKUMEN SINTETIS – TILIK', 'role': 'footer', 'el': none, 's': false}, 'footer') }}
+</div>
+<div class="watermark" aria-hidden="true" style="opacity: {{ wm_opacity }}; transform: translate(-50%, -50%) rotate({{ wm_angle }}deg); font-size: {{ wm_size }}px;">SINTETIS</div>
+</div>
+<script>
+// Pecah setiap .para menjadi baris .ln sesuai lebar kolom yang sebenarnya di browser,
+// supaya teks ground truth (urut baca, satu baris per \n) sama dengan yang dirender.
+(function () {
+  for (const p of Array.from(document.querySelectorAll('.para'))) {
+    const words = p.textContent.split(/\s+/).filter(Boolean);
+    const prefix = p.dataset.prefix || '';
+    p.textContent = '';
+    let pfx = null;
+    if (prefix) {
+      pfx = document.createElement('span');
+      pfx.className = 'pfx';
+      pfx.textContent = prefix + ' ';
+      p.classList.add('hang');
+      p.appendChild(pfx);
+    }
+    p.classList.add('measuring');
+    const spans = words.map((w, i) => {
+      if (i) p.appendChild(document.createTextNode(' '));
+      const s = document.createElement('span');
+      s.textContent = w;
+      p.appendChild(s);
+      return s;
+    });
+    const lines = [];
+    let top = null;
+    for (const s of spans) {
+      const t = s.getBoundingClientRect().top;
+      if (top === null || Math.abs(t - top) > 2) { lines.push([]); top = t; }
+      lines[lines.length - 1].push(s.textContent);
+    }
+    p.textContent = '';
+    p.classList.remove('measuring');
+    lines.forEach((ws, i) => {
+      const d = document.createElement('div');
+      d.className = 'ln' + (i === 0 && pfx ? ' first' : '');
+      for (const k of ['role', 'el', 's']) if (p.dataset[k]) d.dataset[k] = p.dataset[k];
+      if (i === 0 && pfx) d.appendChild(pfx);
+      d.appendChild(document.createTextNode(ws.join(' ')));
+      p.appendChild(d);
+    });
+  }
+  document.body.dataset.wrapped = '1';
+})();
+</script>
+</body>
+</html>

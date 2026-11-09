@@ -1,0 +1,26 @@
+{#- st-a: Surat Telegram, serif. Kop + ruang klasifikasi berdampingan (kiri/kanan), judul tengah, isi bernomor. -#}
+{% extends "base.html.j2" %}
+{% block doc %}
+{{ m.stamp(stamp, 'top') }}
+<div class="head {{ cls_pos }}">
+  <div class="kopcol">
+    {{ m.logo(logo) }}
+    {% for x in kop %}{{ m.ln(x, 'kop' ~ (' last' if loop.last else '')) }}{% endfor %}
+  </div>
+  <div class="ruang">
+    {{ m.row(kls) }}{{ m.row(drj) }}
+  </div>
+</div>
+<div class="titlebox">{{ m.ln(title, 'title') }}{{ m.row(nomor, 'nomor') }}</div>
+<div class="alamat">{% for x in alamat %}{{ m.row(x) }}{% endfor %}</div>
+<div class="rule"></div>
+<div class="isi">{% for x in isi %}{{ m.para(x) }}{% endfor %}</div>
+<div class="ttdblock">
+  {% for x in tempat %}{{ m.row(x) }}{% endfor %}
+  <div class="gap"></div>
+  {% for x in ttd %}{{ m.ln(x) }}{% endfor %}
+  <div class="gap2"></div>
+  {% for x in ttd_nama %}{{ m.ln(x, 'nama' if loop.first else '') }}{% endfor %}
+</div>
+{{ m.stamp(stamp_bottom, 'bottom') }}
+{% endblock %}

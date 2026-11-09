@@ -1,0 +1,11 @@
+/* hn-menu */
+.menu { width: 820px; margin: 30px auto 0; padding: 40px 50px; border: 3px solid #6d4c41; border-radius: 18px; }
+.center { text-align: center; }
+.ln.judul { font-weight: bold; font-size: calc(var(--fs) * 1.9); color: #4e342e; }
+.ln.tagline { font-style: italic; color: #6d4c41; margin-bottom: calc(var(--fs) * 0.8); }
+.section { margin-top: calc(var(--fs) * 1.0); }
+.ln.sub { font-weight: bold; color: #bf360c; border-bottom: 2px solid #bf360c; margin-bottom: 8px; letter-spacing: 2px; }
+.cols { padding: 4px 0; }
+.cols .col1 { display: inline-block; width: 70%; }
+.cols .col2 { display: inline-block; width: 26%; text-align: right; font-weight: bold; }
+.foot { margin-top: calc(var(--fs) * 1.4); font-size: calc(var(--fs) * 0.85); }

@@ -1,0 +1,10 @@
+{#- hn-jebakan: poster dengan kata jebakan (RESEP RAHASIA, EDISI TERBATAS, SEGERA HADIR, grup Telegram). -#}
+{% extends "base.html.j2" %}
+{% block doc %}
+<div class="poster" style="--accent: {{ accent }};">
+  <div class="title">{{ m.para(title) }}</div>
+  <div class="sub">{{ m.para(sub) }}</div>
+  <div class="isi">{% for x in isi %}{{ m.ln(x) }}{% endfor %}</div>
+  {% if extra %}<div class="extra">{% for x in extra %}{% if x.prefix is defined %}{{ m.para(x) }}{% else %}{{ m.ln(x) }}{% endif %}{% endfor %}</div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+/* hn-struk */
+.receipt { width: 600px; margin: 40px auto 0; padding: 30px 28px; border: 1px dashed #999; font-size: calc(var(--fs) * 0.95); }
+.center { text-align: center; }
+.ln.judul { font-weight: bold; font-size: calc(var(--fs) * 1.2); }
+.sep { border-top: 2px dashed #444; margin: 10px 0; }
+.cols .col1 { display: inline-block; width: 56%; }
+.cols .col2 { display: inline-block; width: 40%; text-align: right; }
+.cols.qty .col1 { padding-left: 1.5em; }
+.cols.total { font-weight: bold; }

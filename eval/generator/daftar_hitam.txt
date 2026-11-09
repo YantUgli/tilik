@@ -1,0 +1,86 @@
+# Daftar hitam generator dokumen sintetis (T-29).
+#
+# Nama satuan, pejabat, dan nomor naskah NYATA yang tidak boleh muncul di output
+# generator, di fiktif.yaml, maupun di template. Satu entri per baris; '#' = komentar.
+# Pencocokan (generator/blacklist.py): tanpa beda huruf besar/kecil, tanda baca
+# dianggap spasi, dan harus utuh per kata. Contoh: entri "Siliwangi" cocok dengan
+# "KODAM III/SILIWANGI".
+#
+# Entri sengaja dibuat spesifik (mis. "Kodam Jaya", bukan "Jaya") supaya tidak
+# memblokir kata umum. Sumber: nama satuan yang umum diberitakan dan nama pejabat
+# yang dikutip berita Surat Telegram 2021–2025.
+
+# --- Kodam ---
+Iskandar Muda
+Bukit Barisan
+Sriwijaya
+Kodam Jaya
+Jayakarta
+Siliwangi
+Diponegoro
+Brawijaya
+Mulawarman
+Udayana
+Tanjungpura
+XIII/Merdeka
+Hasanuddin
+Pattimura
+Cenderawasih
+Kasuari
+Tuanku Tambusai
+Tuanku Imam Bonjol
+Radin Inten
+Tambun Bungai
+Palaka Wira
+Mandala Trikora
+
+# --- Komando utama ---
+Kostrad
+Kopassus
+Kodiklatad
+
+# --- Korem ---
+Lilawangsa
+Teuku Umar
+Wirabraja
+Gapu
+Garuda Hitam
+Garuda Dempo
+Suryakancana
+Sunan Gunung Jati
+Maulana Yusuf
+Wijayakusuma
+Pamungkas
+Makutarama
+Warastratama
+Baladhika Jaya
+Bhaskara Jaya
+Wira Satya
+Wira Bhakti
+Wira Sakti
+
+# --- Kodim/Yonif nyata (nomor) ---
+Kodim 0501
+Kodim 0505
+Kodim 0618
+Kodim 0734
+Kodim 0812
+Kodim 1606
+Jaya Yudha
+
+# --- Pejabat yang dikutip berita Surat Telegram / pernyataan terkait ---
+Hadi Tjahjanto
+Andika Perkasa
+Eko Margiyono
+Agus Subiyanto
+Maruli Simanjuntak
+Dudung Abdurachman
+Yudo Margono
+Wahyu Yudhayana
+Kristomei Sianturi
+
+# --- Nomor Surat Telegram nyata yang diberitakan ---
+ST/1221/2021
+ST/1192/2025
+TR/442/2025
+TR/422/2025

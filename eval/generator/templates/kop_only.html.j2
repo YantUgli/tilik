@@ -1,0 +1,10 @@
+{#- kop-only: potongan kop saja (dua baris), sisa halaman kosong. -#}
+{% extends "base.html.j2" %}
+{% block doc %}
+<div class="kopwrap {{ align }}">
+  <div class="kopcol">
+    {{ m.logo(logo) }}
+    {% for x in kop %}{{ m.ln(x, 'kop' ~ (' last' if loop.last else '')) }}{% endfor %}
+  </div>
+</div>
+{% endblock %}

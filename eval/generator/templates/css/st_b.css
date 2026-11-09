@@ -1,0 +1,19 @@
+/* st-b */
+.kopblock { display: flex; align-items: center; gap: 24px; }
+.logo.small { width: 96px; height: 96px; font-size: 20px; }
+.ln.kop { font-weight: bold; font-size: calc(var(--fs) * 0.95); }
+.kopcol { border-bottom: 3px double #222; padding-bottom: 4px; }
+.titlebox { text-align: center; margin: calc(var(--fs) * 1.2) 0 calc(var(--fs) * 0.8); }
+.ln.title { display: inline-block; font-weight: bold; font-size: calc(var(--fs) * 1.3); border: 2px solid #222; padding: 4px 24px; }
+.form { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #222; font-size: calc(var(--fs) * 0.9); }
+.form.left .ruang { order: 0; border-right: 2px solid #222; }
+.form.right .ruang { order: 2; border-left: 2px solid #222; }
+.form.right .nomorcell { order: 1; }
+.cell { padding: 8px 12px; --kw: 7em; }
+.nomorcell { --kw: 4.5em; display: flex; align-items: center; }
+.form-alamat { border: 2px solid #222; border-top: 0; padding: 8px 12px; --kw: 6.5em; font-size: calc(var(--fs) * 0.9); }
+.isi { margin-top: calc(var(--fs) * 1.0); }
+.isi .para { margin-bottom: calc(var(--fs) * 0.3); }
+.ttdblock { --kw: 10.5em; margin-top: calc(var(--fs) * 1.0); display: table; min-width: 42%; margin-left: auto; margin-right: 0; font-size: calc(var(--fs) * 0.9); }
+.stamp-wrap.top { margin-bottom: 14px; }
+.stamp-wrap.bottom { position: absolute; left: 0; right: 0; bottom: 80px; }

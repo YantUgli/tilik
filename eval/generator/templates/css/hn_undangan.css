@@ -1,0 +1,10 @@
+/* hn-undangan */
+.frame { border: 6px double #8d6e63; padding: 50px 60px; text-align: center; min-height: 1450px; }
+.ln.head { font-style: italic; font-size: calc(var(--fs) * 2.0); color: #5d4037; margin-bottom: calc(var(--fs) * 1.0); }
+.intro { margin: calc(var(--fs) * 0.8) 0; }
+.pengantin { margin: calc(var(--fs) * 1.0) 0; }
+.ln.nama { font-style: italic; font-weight: bold; font-size: calc(var(--fs) * 1.6); color: #4e342e; }
+.ln.ortu { font-size: calc(var(--fs) * 0.9); margin-bottom: calc(var(--fs) * 0.4); }
+.acara { margin: calc(var(--fs) * 1.0) 0; }
+.ln.sub { font-weight: bold; margin-top: calc(var(--fs) * 0.6); }
+.ln.turut { font-style: italic; margin-top: calc(var(--fs) * 1.0); }

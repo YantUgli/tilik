@@ -1,0 +1,11 @@
+/* hn-rt */
+.kopcol { text-align: center; }
+.ln.kop1 { font-weight: bold; font-size: calc(var(--fs) * 1.2); }
+.ln.kop2 { font-weight: bold; }
+.ln.kop3 { font-size: calc(var(--fs) * 0.8); font-style: italic; }
+.rule { border-top: 2px solid #111; margin: 10px 0 calc(var(--fs) * 1.0); }
+.fields { --kw: 4.5em; }
+.kepada { margin: calc(var(--fs) * 1.0) 0; }
+.body { margin: calc(var(--fs) * 0.5) 0; }
+.acara { --kw: 7.5em; margin-left: 2em; }
+.ttdblock { margin-top: calc(var(--fs) * 1.2); display: table; min-width: 42%; margin-left: auto; margin-right: 0; text-align: center; }

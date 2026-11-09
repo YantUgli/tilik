@@ -1,0 +1,18 @@
+/* st-c */
+.corner { display: flex; margin-bottom: 18px; }
+.corner.right { justify-content: flex-end; }
+.corner.left { justify-content: flex-start; }
+.corner .box { border: 2px solid #333; padding: 6px 14px; --kw: 7em; font-size: calc(var(--fs) * 0.85); }
+.kopblock { display: grid; grid-template-columns: 130px 1fr; column-gap: 20px; align-items: center; }
+.kopcol { text-align: center; }
+.ln.kop { font-weight: bold; font-size: calc(var(--fs) * 1.05); }
+.rule { border-top: 4px solid #222; border-bottom: 1px solid #222; height: 6px; margin: 12px 0 0; }
+.titlebox { text-align: center; margin: calc(var(--fs) * 1.0) 0; }
+.ln.title { font-weight: bold; font-size: calc(var(--fs) * 1.3); letter-spacing: 3px; }
+.nomor .k { width: auto; }
+.alamat { --kw: 7em; margin-bottom: calc(var(--fs) * 0.8); }
+.isi .para { margin-bottom: calc(var(--fs) * 0.3); }
+.ttdblock { --kw: 10.5em; margin-top: calc(var(--fs) * 1.0); display: table; min-width: 42%; margin-left: auto; margin-right: 0; }
+.ttdblock .nama { font-weight: bold; text-decoration: underline; }
+.stamp-wrap.top { margin-bottom: 12px; }
+.stamp-wrap.bottom { position: absolute; left: 0; right: 0; bottom: 80px; }

@@ -1,0 +1,12 @@
+/* hn-civil-b */
+.kopblock { display: flex; align-items: center; gap: 24px; }
+.ln.kop1 { font-weight: bold; font-size: calc(var(--fs) * 1.2); color: #0d3b66; }
+.ln.kop2 { font-size: calc(var(--fs) * 1.0); color: #0d3b66; }
+.ln.alamat { font-size: calc(var(--fs) * 0.75); color: #333; }
+.rule { border-top: 3px solid #0d3b66; margin: 12px 0 calc(var(--fs) * 1.0); }
+.tgl { text-align: right; margin-bottom: calc(var(--fs) * 0.6); }
+.fields { --kw: 7.8em; }
+.kepada { margin: calc(var(--fs) * 1.0) 0; }
+.body .para { margin-bottom: calc(var(--fs) * 0.5); }
+.ttdblock { margin-top: calc(var(--fs) * 1.0); display: table; min-width: 42%; margin-left: auto; margin-right: 0; }
+.tembusan { margin-top: calc(var(--fs) * 0.8); font-size: calc(var(--fs) * 0.9); }

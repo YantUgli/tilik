@@ -1,0 +1,13 @@
+/* sb-b */
+.kopblock { display: grid; grid-template-columns: 130px 1fr 130px; align-items: center; }
+.kopcol { text-align: center; }
+.ln.kop { font-weight: bold; font-size: calc(var(--fs) * 1.05); }
+.rule { border-top: 3px solid #111; margin: 10px 0 calc(var(--fs) * 1.0); }
+.tgl { text-align: right; margin-bottom: calc(var(--fs) * 0.6); }
+.fields { --kw: 7.4em; }
+.kepada { margin: calc(var(--fs) * 1.0) 0 calc(var(--fs) * 1.0); }
+.body .para { margin-bottom: calc(var(--fs) * 0.35); }
+.ttdblock { margin-top: calc(var(--fs) * 1.2); display: table; min-width: 42%; margin-left: auto; margin-right: 0; }
+.tembusan { margin-top: calc(var(--fs) * 1.0); font-size: calc(var(--fs) * 0.9); }
+.stamp-wrap.top { margin-bottom: 14px; }
+.stamp-wrap.bottom { position: absolute; left: 0; right: 0; bottom: 80px; }
