@@ -1,0 +1,47 @@
+{
+  "caption": "Lembur di kantor Yonif 999/Contoh",
+  "ocr_text": "KLASIFIKASI : RAHASIA\nNOMOR",
+  "ocr_words": [
+    {
+      "text": "KLASIFIKASI",
+      "conf": 91,
+      "bbox": [
+        0.1,
+        0.1,
+        0.3,
+        0.14
+      ]
+    },
+    {
+      "text": ":",
+      "conf": 62,
+      "bbox": [
+        0.31,
+        0.1,
+        0.32,
+        0.14
+      ]
+    },
+    {
+      "text": "RAHASIA",
+      "conf": 88,
+      "bbox": [
+        0.33,
+        0.1,
+        0.5,
+        0.14
+      ]
+    },
+    {
+      "text": "NOMOR",
+      "conf": 45,
+      "bbox": [
+        0.1,
+        0.16,
+        0.22,
+        0.2
+      ]
+    }
+  ],
+  "lang": "id"
+}

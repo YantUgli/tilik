@@ -178,6 +178,7 @@ def test_invalid_context_regex_rejected(tmp_path):
         {"category": "politik_praktis"},                                  # kategori bukan milik L3
         {"category": "kemungkinan_dokumen"},                              # hanya dibuat browser (K-2)
         {"severity": "kritis"},
+        {"severity": "tinggi"},                                           # L3 tinggi hanya lewat combine_l3
         {"signal": "spesifik"},
         {"applies_to": []},
         {"applies_to": ["image"]},
@@ -300,10 +301,10 @@ def test_multiple_matches_and_overlap_merged(tmp_path):
 
 def test_low_conf_words_ignored(tmp_path):
     engine = engine_from(tmp_path, [ST_TITLE])
-    words = [OcrWord("SURAT", (0.1, 0.1, 0.2, 0.05), 90), OcrWord("TELEGRAM", (0.32, 0.1, 0.3, 0.05), 40)]
+    words = [OcrWord("SURAT", (0.1, 0.1, 0.3, 0.15), 90), OcrWord("TELEGRAM", (0.32, 0.1, 0.62, 0.15), 40)]
     assert not engine.run(RuleInput(caption=None, ocr_text="SURAT TELEGRAM", ocr_words=words))
 
-    words[1] = OcrWord("TELEGRAM", (0.32, 0.1, 0.3, 0.05), 90)
+    words[1] = OcrWord("TELEGRAM", (0.32, 0.1, 0.62, 0.15), 90)
     found = engine.run(RuleInput(caption=None, ocr_text="SURAT TELEGRAM", ocr_words=words))
     assert len(found) == 1
 
@@ -312,9 +313,9 @@ def test_low_conf_word_does_not_bridge(tmp_path):
     """Kata ber-conf rendah di tengah tidak boleh membuat \\s+ melompatinya."""
     engine = engine_from(tmp_path, [ST_TITLE])
     words = [
-        OcrWord("SURAT", (0.1, 0.1, 0.1, 0.05), 90),
-        OcrWord("xx", (0.21, 0.1, 0.05, 0.05), 20),
-        OcrWord("TELEGRAM", (0.27, 0.1, 0.2, 0.05), 90),
+        OcrWord("SURAT", (0.1, 0.1, 0.2, 0.15), 90),
+        OcrWord("xx", (0.21, 0.1, 0.26, 0.15), 20),
+        OcrWord("TELEGRAM", (0.27, 0.1, 0.47, 0.15), 90),
     ]
     assert not engine.run(RuleInput(caption=None, ocr_text="SURAT xx TELEGRAM", ocr_words=words))
 
@@ -322,13 +323,28 @@ def test_low_conf_word_does_not_bridge(tmp_path):
 def test_redact_bboxes_from_words(tmp_path):
     engine = engine_from(tmp_path, [ST_TITLE])
     words = [
-        OcrWord("PERIHAL", (0.1, 0.05, 0.2, 0.05), 95),
-        OcrWord("SURAT", (0.1, 0.2, 0.2, 0.05), 90),
-        OcrWord("TELEGRAM", (0.32, 0.2, 0.3, 0.05), 88),
+        OcrWord("PERIHAL", (0.125, 0.0625, 0.375, 0.125), 95),
+        OcrWord("SURAT", (0.125, 0.25, 0.375, 0.3125), 90),
+        OcrWord("TELEGRAM", (0.5, 0.25, 0.875, 0.3125), 88),
     ]
     found = engine.run(RuleInput(caption=None, ocr_text="PERIHAL\nSURAT TELEGRAM", ocr_words=words))
     assert found[0]["redactable"] is True
-    assert found[0]["evidence"]["bboxes"] == [[0.1, 0.2, 0.2, 0.05], [0.32, 0.2, 0.3, 0.05]]
+    # masukan [x0, y0, x1, y1] → keluaran [x, y, w, h]
+    assert found[0]["evidence"]["bboxes"] == [[0.125, 0.25, 0.25, 0.0625], [0.5, 0.25, 0.375, 0.0625]]
+
+
+def test_invalid_word_bbox_dropped_but_text_kept(tmp_path):
+    """bbox terbalik (x1 < x0) atau di luar 0..1: kata tetap dipakai untuk teks, bbox dibuang."""
+    engine = engine_from(tmp_path, [ST_TITLE])
+    words = [OcrWord("SURAT", (0.3, 0.1, 0.1, 0.15), 90), OcrWord("TELEGRAM", (0.32, 0.1, 0.62, 0.15), 90)]
+    found = engine.run(RuleInput(caption=None, ocr_text="SURAT TELEGRAM", ocr_words=words))
+    assert len(found) == 1
+    assert found[0]["evidence"]["bboxes"] == [[0.32, 0.1, pytest.approx(0.3), pytest.approx(0.05)]]
+
+
+def test_l4_rule_may_be_tinggi(tmp_path):
+    engine = engine_from(tmp_path, [HP_CAPTION | {"severity": "tinggi"}])
+    assert engine.run(RuleInput(caption="wa 081234567890", ocr_text=None, ocr_words=None))[0]["severity"] == "tinggi"
 
 
 def test_redact_without_words_and_caption(tmp_path):
@@ -343,7 +359,7 @@ def test_redact_without_words_and_caption(tmp_path):
 
 def test_words_without_ocr_text(tmp_path):
     engine = engine_from(tmp_path, [ST_TITLE])
-    words = [OcrWord("SURAT", (0.1, 0.1, 0.2, 0.05), 90), OcrWord("TELEGRAM", (0.32, 0.1, 0.3, 0.05), 90)]
+    words = [OcrWord("SURAT", (0.1, 0.1, 0.3, 0.15), 90), OcrWord("TELEGRAM", (0.32, 0.1, 0.62, 0.15), 90)]
     found = engine.run(RuleInput(caption=None, ocr_text=None, ocr_words=words))
     assert len(found) == 1 and len(found[0]["evidence"]["bboxes"]) == 2
 
@@ -351,7 +367,7 @@ def test_words_without_ocr_text(tmp_path):
 def test_misaligned_words_fall_back_to_words_only(tmp_path):
     """Bila ocr_text tidak cocok dengan daftar kata, teks dibangun ulang dari kata ber-conf cukup."""
     engine = engine_from(tmp_path, [ST_TITLE])
-    words = [OcrWord("SURAT", (0.1, 0.1, 0.2, 0.05), 90), OcrWord("TELEGRAM", (0.32, 0.1, 0.3, 0.05), 40)]
+    words = [OcrWord("SURAT", (0.1, 0.1, 0.3, 0.15), 90), OcrWord("TELEGRAM", (0.32, 0.1, 0.62, 0.15), 40)]
     assert not engine.run(RuleInput(caption=None, ocr_text="teks lain SURAT TELEGRAM", ocr_words=words))
 
 
@@ -431,7 +447,7 @@ def test_output_contract(tmp_path):
     rules_dir = tmp_path / "rules"
     write_rules(rules_dir, [KOP, KLASIFIKASI_GENERIC, ST_NUMBER, ST_TITLE.copy() | {"id": "R-L3-904"}, HP_CAPTION, TTK])
     engine = RuleEngine(load_rules(rules_dir) + load_rules())
-    words = [OcrWord(w, (0.1 * i, 0.5, 0.08, 0.04), 90) for i, w in enumerate("SURAT TELEGRAM".split())]
+    words = [OcrWord(w, (0.1 * i, 0.5, 0.1 * i + 0.08, 0.54), 90) for i, w in enumerate("SURAT TELEGRAM".split())]
     text = (
         "KODAM IX/CONTOH\nKODIM 9999/FIKTIF\nKLASIFIKASI : RAHASIA\n"
         "NOMOR : ST/123/2026\nSURAT TELEGRAM\nA KMA B TTK C KMA\nhub 081234567890"
