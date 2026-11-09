@@ -11,6 +11,7 @@ import math
 from dataclasses import dataclass
 
 from .combine import combine_l3
+from .limits import OCR_TEXT_MAX_CHARS
 from .matcher import MASK_CHAR, match_rule
 from .models import OcrWord, RawFinding, Rule, RuleInput
 
@@ -18,6 +19,9 @@ MIN_WORD_CONF = 50          # FR-OCR-02
 EVIDENCE_MAX_CHARS = 200    # Finding.evidence.text maxLength
 ID_PREFIXES = ("b", "c", "v")
 _SOURCE_ORDER = {"caption": 0, "ocr": 1}
+
+
+_WordSpan = tuple[int, int, OcrWord]
 
 
 @dataclass(frozen=True)
@@ -85,53 +89,83 @@ def _prepare_ocr(ocr_text: str | None, words: list[OcrWord] | None) -> _OcrSourc
 
     Tanpa daftar kata: `ocr_text` dipakai apa adanya. Dengan daftar kata: setiap kata
     disejajarkan berurutan ke `ocr_text`; kata ber-conf < 50 ditutup dengan MASK_CHAR
-    (offset dan baris tetap). Bila ada kata yang tidak bisa disejajarkan (atau
-    `ocr_text` kosong), teks dibangun ulang dari kata ber-conf cukup, dipisah spasi.
+    (offset dan baris tetap). `ocr_text` boleh terpotong (route memotong di
+    OCR_TEXT_MAX_CHARS): kata setelah titik potong diabaikan, dan kata yang terpotong
+    di tengah tidak diberi bbox. Bila ada kata yang tidak sejajar di tengah teks (atau
+    `ocr_text` kosong), teks dibangun ulang dari kata ber-conf cukup, dipisah spasi,
+    dan dipotong di OCR_TEXT_MAX_CHARS.
     """
     if not words:
         return _OcrSource(ocr_text, []) if ocr_text else None
 
     usable = [w for w in words if isinstance(w.text, str) and w.text.strip()]
-    aligned = _align(ocr_text, usable) if ocr_text else None
+    alignment = _align(ocr_text, usable) if ocr_text else None
+    if alignment is None:
+        return _rebuild_from_words(usable)
 
-    if aligned is None:
-        parts: list[str] = []
-        spans: list[tuple[int, int, OcrWord]] = []
-        cursor = 0
-        for w in usable:
-            if w.conf < MIN_WORD_CONF:
-                continue
-            token = w.text.strip()
-            if parts:
-                cursor += 1
-            spans.append((cursor, cursor + len(token), w))
-            parts.append(token)
-            cursor += len(token)
-        text = " ".join(parts)
-        return _OcrSource(text, [s for s in spans if _valid_bbox(s[2].bbox)]) if text else None
-
+    aligned, partial = alignment
     chars = list(ocr_text)
-    kept: list[tuple[int, int, OcrWord]] = []
+    kept: list[_WordSpan] = []
     for start, end, w in aligned:
         if w.conf < MIN_WORD_CONF:
             chars[start:end] = MASK_CHAR * (end - start)
         elif _valid_bbox(w.bbox):
             kept.append((start, end, w))
+    if partial is not None and partial[2].conf < MIN_WORD_CONF:
+        start, end, _ = partial
+        chars[start:end] = MASK_CHAR * (end - start)
     return _OcrSource("".join(chars), kept)
 
 
-def _align(text: str, words: list[OcrWord]) -> list[tuple[int, int, OcrWord]] | None:
-    """Menyejajarkan kata ke teks secara berurutan; hanya spasi yang boleh di antaranya."""
-    out = []
+def _rebuild_from_words(words: list[OcrWord]) -> _OcrSource | None:
+    """Jalur cadangan: kata ber-conf cukup dipisah spasi, maksimal OCR_TEXT_MAX_CHARS."""
+    parts: list[str] = []
+    spans: list[_WordSpan] = []
+    cursor = 0
+    for w in words:
+        if w.conf < MIN_WORD_CONF:
+            continue
+        if parts:
+            cursor += 1
+        if cursor >= OCR_TEXT_MAX_CHARS:
+            break
+        token = w.text.strip()
+        parts.append(token)
+        spans.append((cursor, cursor + len(token), w))
+        cursor += len(token)
+    text = " ".join(parts)[:OCR_TEXT_MAX_CHARS]
+    if not text:
+        return None
+    kept = [(s, e, w) for s, e, w in spans if e <= len(text) and _valid_bbox(w.bbox)]
+    return _OcrSource(text, kept)
+
+
+def _align(text: str, words: list[OcrWord]) -> tuple[list[_WordSpan], _WordSpan | None] | None:
+    """Menyejajarkan kata ke teks secara berurutan; hanya spasi yang boleh di antaranya.
+
+    Mengembalikan `(kata_sejajar, kata_terpotong)`. Bila teks habis sebelum kata habis
+    (`ocr_text` dipotong), penyejajaran berhenti dengan sukses saat sisa teks hanya
+    spasi atau merupakan awalan kata berikutnya (`kata_terpotong` = rentang awalan itu);
+    kata sesudahnya dibuang. Ketidaksejajaran lain → None.
+    """
+    out: list[_WordSpan] = []
     cursor = 0
     for w in words:
         token = w.text.strip()
         index = text.find(token, cursor)
-        if index < 0 or text[cursor:index].strip():
-            return None
-        out.append((index, index + len(token), w))
-        cursor = index + len(token)
-    return out
+        if index >= 0 and not text[cursor:index].strip():
+            out.append((index, index + len(token), w))
+            cursor = index + len(token)
+            continue
+        rest = text[cursor:]
+        tail = rest.lstrip()
+        if not tail:
+            return out, None
+        if token.startswith(tail):
+            start = len(text) - len(tail)
+            return out, (start, len(text), w)
+        return None
+    return out, None
 
 
 def _valid_bbox(bbox) -> bool:

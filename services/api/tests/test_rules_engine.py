@@ -26,6 +26,9 @@ from rules_engine import (
     combine_l3,
     load_rules,
 )
+from rules_engine.engine import MIN_WORD_CONF, _align, _prepare_ocr
+from rules_engine.limits import OCR_TEXT_MAX_CHARS
+from rules_engine.matcher import MASK_CHAR
 
 API_ROOT = Path(__file__).resolve().parents[1]
 CONTRACTS = API_ROOT.parents[1] / "contracts"
@@ -371,6 +374,87 @@ def test_misaligned_words_fall_back_to_words_only(tmp_path):
     assert not engine.run(RuleInput(caption=None, ocr_text="teks lain SURAT TELEGRAM", ocr_words=words))
 
 
+def _words_for(text: str, conf: float = 90) -> list[OcrWord]:
+    """Satu OcrWord per token spasi di `text`, bbox dummy yang valid."""
+    return [OcrWord(tok, (0.1, 0.1, 0.2, 0.15), conf) for tok in text.split()]
+
+
+def test_truncated_ocr_text_keeps_lines(tmp_path):
+    """ocr_text dipotong di batas server, ocr_words tetap lengkap (bug setelah 4192bd6)."""
+    lines = [f"BARIS {i:03d} ISI CATATAN HARIAN" for i in range(500)]
+    lines[200:202] = ["KODAM IX/CONTOH", "KODIM 9999/FIKTIF"]   # kop sebelum titik potong (±baris 275)
+    full = "\n".join(lines)
+    assert len(full) > OCR_TEXT_MAX_CHARS
+    cut = full[:OCR_TEXT_MAX_CHARS]
+    words = _words_for(full)
+
+    src = _prepare_ocr(cut, words)
+    assert len(src.text) <= OCR_TEXT_MAX_CHARS
+    assert src.text.count("\n") == cut.count("\n") > 250
+    assert src.text == cut                              # jalur sejajar, bukan cadangan
+    assert all(end <= len(cut) for _, end, _ in src.words)
+
+    engine = engine_from(tmp_path, [KOP])
+    found = engine.run(RuleInput(caption=None, ocr_text=cut, ocr_words=words))
+    assert len(found) == 1 and found[0]["evidence"]["text"].startswith("KODAM")
+    assert len(found[0]["evidence"]["bboxes"]) == 3      # KODAM, IX/CONTOH, KODIM (regex berhenti di KODIM)
+
+
+def test_truncated_mid_word(tmp_path):
+    full = "SURAT TELEGRAM\nNOMOR ST/1/2026\nPERIHAL LAPORAN"
+    cut = full[: full.index("PERIHAL") + 4]                # "...\nPERI"
+    words = [
+        OcrWord("SURAT", (0.1, 0.1, 0.3, 0.15), 90),
+        OcrWord("TELEGRAM", (0.32, 0.1, 0.62, 0.15), 90),
+        OcrWord("NOMOR", (0.1, 0.2, 0.3, 0.25), 90),
+        OcrWord("ST/1/2026", (0.32, 0.2, 0.6, 0.25), 90),
+        OcrWord("PERIHAL", (0.1, 0.3, 0.3, 0.35), 90),
+        OcrWord("LAPORAN", (0.32, 0.3, 0.6, 0.35), 90),
+    ]
+    aligned, partial = _align(cut, words)
+    assert [w.text for _, _, w in aligned] == ["SURAT", "TELEGRAM", "NOMOR", "ST/1/2026"]
+    assert partial is not None and partial[2].text == "PERIHAL"
+
+    src = _prepare_ocr(cut, words)
+    assert src.text == cut
+    assert "PERIHAL" not in [w.text for _, _, w in src.words]   # kata terpotong tanpa bbox
+    assert "LAPORAN" not in [w.text for _, _, w in src.words]   # kata setelah titik potong dibuang
+
+    engine = engine_from(tmp_path, [ST_TITLE])
+    found = engine.run(RuleInput(caption=None, ocr_text=cut, ocr_words=words))
+    assert len(found) == 1 and len(found[0]["evidence"]["bboxes"]) == 2
+
+    # kata terpotong ber-conf rendah tetap ditutup (FR-OCR-02)
+    low = words[:4] + [OcrWord("PERIHAL", (0.1, 0.3, 0.3, 0.35), MIN_WORD_CONF - 10)]
+    src = _prepare_ocr(cut, low)
+    assert src.text.endswith(MASK_CHAR * 4) and "PERI" not in src.text
+
+
+def test_truncated_tail_whitespace_only():
+    words = _words_for("SURAT TELEGRAM NOMOR")
+    aligned, partial = _align("SURAT TELEGRAM \n ", words)
+    assert [w.text for _, _, w in aligned] == ["SURAT", "TELEGRAM"] and partial is None
+
+
+def test_mid_text_misalignment_still_none():
+    words = _words_for("SURAT ABC TELEGRAM")
+    assert _align("SURAT XYZ TELEGRAM", words) is None
+    assert _align("SURAT XYZ", words) is None            # "XYZ" bukan awalan "ABC"
+
+
+def test_fallback_text_capped():
+    # 10 karakter + spasi: 8.000 tidak habis dibagi 11, jadi kata terakhir melewati batas
+    words = [OcrWord(f"KATA{i:06d}", (0.1, 0.1, 0.2, 0.15), 90) for i in range(1500)]  # ±16.500 karakter
+    src = _prepare_ocr("teks yang tidak sejajar", words)
+    assert len(src.text) <= OCR_TEXT_MAX_CHARS
+    assert src.words and all(end <= len(src.text) for _, end, _ in src.words)
+    assert all(src.text[s:e] == w.text for s, e, w in src.words)
+
+    # tanpa ocr_text sama sekali, batas yang sama berlaku
+    src = _prepare_ocr(None, words)
+    assert len(src.text) <= OCR_TEXT_MAX_CHARS
+
+
 def test_evidence_text_truncated(tmp_path):
     rule = make_rule(match={"any_regex": [r"A{10,}"]}, tests={"positive": ["A" * 10], "negative": ["A"]})
     engine = engine_from(tmp_path, [rule])
@@ -525,6 +609,13 @@ def test_regex_time_budget(tmp_path):
         RuleInput(caption=text, ocr_text=text, ocr_words=None),
         RuleInput(caption=None, ocr_text="TTK" + "x" * 10_000, ocr_words=None),
         RuleInput(caption=None, ocr_text=("KODAM " * 10 + "\n") * 160, ocr_words=None),
+        # 2.000 kata × 64 karakter lewat jalur cadangan (ocr_text tidak sejajar)
+        RuleInput(
+            caption=None,
+            ocr_text="teks lain",
+            ocr_words=[OcrWord(("TTK" + "A" * 61) if i % 2 else "K" * 64, (0.1, 0.1, 0.2, 0.15), 90)
+                       for i in range(2000)],
+        ),
     ]:
         start = time.perf_counter()
         engine.run(inp)

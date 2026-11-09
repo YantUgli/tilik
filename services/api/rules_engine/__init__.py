@@ -7,11 +7,13 @@ Pemakaian:
 
 from .combine import combine_l3
 from .engine import RuleEngine
+from .limits import OCR_TEXT_MAX_CHARS
 from .loader import RuleLoadError, load_rules
 from .matcher import match_rule
 from .models import OcrWord, RawFinding, Rule, RuleInput
 
 __all__ = [
+    "OCR_TEXT_MAX_CHARS",
     "OcrWord",
     "RawFinding",
     "Rule",
