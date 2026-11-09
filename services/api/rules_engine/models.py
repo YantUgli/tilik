@@ -9,7 +9,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class OcrWord:
     text: str
-    bbox: tuple[float, float, float, float]  # [x, y, w, h] relatif 0..1 terhadap gambar asli
+    bbox: tuple[float, float, float, float]  # [x0, y0, x1, y1] relatif 0..1 (CaptionRequest.ocr_words)
     conf: float
 
 
@@ -68,4 +68,4 @@ class RawFinding:
     explanation: str | None
     basis: str | None
     redactable: bool
-    bboxes: tuple[tuple[float, float, float, float], ...] | None
+    bboxes: tuple[tuple[float, float, float, float], ...] | None  # [x, y, w, h] (Finding.evidence)

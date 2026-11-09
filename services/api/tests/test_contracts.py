@@ -26,6 +26,7 @@ EXPECTED_SCHEMAS = {
     "finding",
     "layer-result",
     "analysis-result",
+    "caption-request",
     "caption-response",
     "visual-response",
     "error",
@@ -386,6 +387,13 @@ INVALID_REASONS: dict[str, set[tuple]] = {
     "analysis-result.invalid.missing-incomplete.json": {("risk",)},
     "analysis-result.invalid.risk-level-info.json": {("risk", "level")},
     "analysis-result.invalid.wrong-schema-version.json": {("schema_version",)},
+    "caption-request.invalid.missing-lang.json": {()},
+    "caption-request.invalid.word-bbox-out-of-range.json": {("ocr_words", 0, "bbox", 2)},
+    "caption-request.invalid.word-bbox-pixels.json": {("ocr_words", 0, "bbox", i) for i in range(4)},
+    "caption-request.invalid.word-conf-over-100.json": {("ocr_words", 0, "conf")},
+    "caption-request.invalid.word-extra-field.json": {("ocr_words", 0)},
+    "caption-request.invalid.word-missing-conf.json": {("ocr_words", 0)},
+    "caption-request.invalid.word-text-too-long.json": {("ocr_words", 0, "text")},
     "caption-response.invalid.missing-request-id.json": {()},
     "caption-response.invalid.ok-without-provider.json": {("layers", 2, "provider")},
     "caption-response.invalid.two-layers-only.json": {("layers",)},
@@ -463,3 +471,38 @@ def test_visual_response_error_without_provider_example() -> None:
     assert is_valid("visual-response", response)
     layer = response["layers"][0]
     assert (layer["status"], layer["provider"], layer["findings"]) == ("error", None, [])
+
+
+# --- CaptionRequest.ocr_words (FR-OCR-02, FR-L3-08) --------------------------
+
+
+def _caption_request(words: object) -> dict:
+    return {"caption": None, "ocr_text": "w", "ocr_words": words, "lang": "id"}
+
+
+@pytest.mark.parametrize(("count", "ok"), [(0, True), (2000, True), (2001, False)])
+def test_caption_request_ocr_words_max_items(count: int, ok: bool) -> None:
+    words = [{"text": "w", "conf": 90, "bbox": [0.1, 0.1, 0.2, 0.2]}] * count
+    assert is_valid("caption-request", _caption_request(words)) is ok
+
+
+@pytest.mark.parametrize(
+    ("conf", "ok"), [(0, True), (100, True), (49.5, True), (-1, False), (100.5, False), ("90", False)]
+)
+def test_caption_request_word_conf_range(conf: object, ok: bool) -> None:
+    words = [{"text": "w", "conf": conf, "bbox": [0.1, 0.1, 0.2, 0.2]}]
+    assert is_valid("caption-request", _caption_request(words)) is ok
+
+
+def test_caption_request_ocr_words_optional_and_nullable() -> None:
+    base = {"caption": "halo", "ocr_text": None, "lang": "id"}
+    assert is_valid("caption-request", base)
+    assert is_valid("caption-request", base | {"ocr_words": None})
+    assert not is_valid("caption-request", base | {"ocr_words": "SURAT TELEGRAM"})
+
+
+def test_openapi_caption_request_refs_schema_file() -> None:
+    doc = yaml.safe_load((CONTRACTS / "openapi.yaml").read_text(encoding="utf-8"))
+    body = doc["paths"]["/analyze/caption"]["post"]["requestBody"]["content"]["application/json"]["schema"]
+    assert body == {"$ref": "#/components/schemas/CaptionRequest"}
+    assert doc["components"]["schemas"]["CaptionRequest"] == {"$ref": "./caption-request.schema.json"}

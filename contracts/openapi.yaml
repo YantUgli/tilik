@@ -78,24 +78,7 @@ paths:
 components:
   schemas:
     CaptionRequest:
-      type: object
-      required: [caption, ocr_text, lang]
-      description: >-
-        Bila caption dan ocr_text sama-sama kosong (null, string kosong, atau hanya
-        spasi), respons tetap 200: L3 dan L4 aturan ok dengan findings kosong,
-        L4 LLM skipped dengan provider null.
-      properties:
-        caption:
-          type: [string, "null"]
-          maxLength: 2200
-          description: Lebih dari 2.200 karakter ditolak dengan 400 INVALID_INPUT.
-        ocr_text:
-          type: [string, "null"]
-          description: >-
-            Lebih dari 8.000 karakter dipotong (bukan ditolak); note di LayerResult diisi.
-            Diperlakukan sebagai data tak tepercaya.
-        lang:
-          const: id
+      $ref: "./caption-request.schema.json"
     VisualRequest:
       type: object
       required: [image]

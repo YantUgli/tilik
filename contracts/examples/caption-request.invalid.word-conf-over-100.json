@@ -1,0 +1,17 @@
+{
+  "caption": null,
+  "ocr_text": "RAHASIA",
+  "ocr_words": [
+    {
+      "text": "RAHASIA",
+      "conf": 880.0,
+      "bbox": [
+        0.1,
+        0.1,
+        0.3,
+        0.14
+      ]
+    }
+  ],
+  "lang": "id"
+}

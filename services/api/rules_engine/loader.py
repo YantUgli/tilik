@@ -105,6 +105,9 @@ def _parse_rule(raw: Any, file_name: str, index: int) -> Rule:
     severity = raw["severity"]
     if severity not in SEVERITIES:
         raise fail(f"severity tidak dikenal: {severity!r}")
+    if layer == "L3" and severity == "tinggi":
+        # FR-L3-05 / R8: L3 hanya boleh tinggi lewat combine_l3, bukan dari satu aturan.
+        raise fail("aturan L3 tidak boleh severity tinggi; kenaikan hanya lewat penggabungan sinyal (FR-L3-05)")
 
     signal = raw.get("signal", "generic")
     if signal not in SIGNALS:

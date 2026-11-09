@@ -59,7 +59,7 @@ class RuleEngine:
                 for start, end in match_rule(rule, text):
                     bboxes = None
                     if where == "ocr" and rule.redact == "matched_words" and ocr and ocr.words:
-                        bboxes = tuple(w.bbox for s, e, w in ocr.words if s < end and e > start) or None
+                        bboxes = tuple(_to_xywh(w.bbox) for s, e, w in ocr.words if s < end and e > start) or None
                     found.append(RawFinding(
                         rule_ref=rule.id,
                         layer=rule.layer,
@@ -135,11 +135,21 @@ def _align(text: str, words: list[OcrWord]) -> list[tuple[int, int, OcrWord]] | 
 
 
 def _valid_bbox(bbox) -> bool:
+    """bbox masukan [x0, y0, x1, y1]: empat angka 0..1 dengan x1 >= x0 dan y1 >= y0."""
     try:
         values = [float(v) for v in bbox]
     except (TypeError, ValueError):
         return False
-    return len(values) == 4 and all(math.isfinite(v) and 0.0 <= v <= 1.0 for v in values)
+    if len(values) != 4 or not all(math.isfinite(v) and 0.0 <= v <= 1.0 for v in values):
+        return False
+    x0, y0, x1, y1 = values
+    return x1 >= x0 and y1 >= y0
+
+
+def _to_xywh(bbox) -> tuple[float, float, float, float]:
+    """[x0, y0, x1, y1] (kata OCR) → [x, y, w, h] (Finding.evidence.bboxes)."""
+    x0, y0, x1, y1 = (float(v) for v in bbox)
+    return (x0, y0, x1 - x0, y1 - y0)
 
 
 def _evidence_text(text: str) -> str:

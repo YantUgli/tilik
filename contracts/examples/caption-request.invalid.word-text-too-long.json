@@ -1,0 +1,17 @@
+{
+  "caption": null,
+  "ocr_text": "x",
+  "ocr_words": [
+    {
+      "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "conf": 90,
+      "bbox": [
+        0.1,
+        0.1,
+        0.3,
+        0.14
+      ]
+    }
+  ],
+  "lang": "id"
+}
