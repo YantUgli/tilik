@@ -1,0 +1,31 @@
+/* Dasar semua tata letak: halaman A4 pada 150 dpi = 1240 x 1754 px. */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1240px; height: 1754px; overflow: hidden; background: #fff; }
+body { font-family: var(--font); font-size: var(--fs); color: #111; line-height: 1.35;
+       -webkit-font-smoothing: antialiased; }
+.page { position: relative; width: 1240px; height: 1754px; overflow: hidden; background: #fff; }
+.doc { position: absolute; inset: 0; padding: var(--mt) var(--mx) 120px var(--mx); }
+.ln { white-space: pre; }
+.para { white-space: normal; }
+.para.measuring span { white-space: nowrap; }
+.para.hang { padding-left: 2.2em; }
+.para.hang.measuring { text-indent: -2.2em; }
+.para.hang .ln.first { margin-left: -2.2em; }
+.para.indent1.measuring { text-indent: 2em; }
+.para.indent1 .ln:first-child { padding-left: 2em; }
+.pfx { display: inline-block; width: 2.2em; white-space: pre; text-indent: 0; }
+.row .k { display: inline-block; width: var(--kw, 9em); }
+.row .c { display: inline-block; width: 1.4em; white-space: pre; }
+.cols { display: block; }
+.logo { display: inline-flex; align-items: center; justify-content: center; width: 120px; height: 120px;
+        background: #c8c8c8; border: 2px solid #9a9a9a; color: #555; font-family: "Liberation Sans";
+        font-size: 24px; font-weight: bold; }
+.stamp-wrap { text-align: center; }
+.ln.stamp { display: inline-block; color: #c62828; border: 3px solid #c62828; padding: 2px 18px;
+            font-family: "Liberation Sans"; font-weight: bold; font-size: calc(var(--fs) * 1.2); letter-spacing: 0; }
+.ln.footer { position: absolute; left: 0; right: 0; bottom: 40px; text-align: center;
+             font-family: "Liberation Sans"; font-size: 16px; color: #666; }
+.watermark { position: absolute; left: 50%; top: 50%; z-index: 10; pointer-events: none; white-space: nowrap;
+             font-family: "Liberation Sans"; font-weight: bold; color: #000; letter-spacing: 12px; }
+.gap { height: calc(var(--fs) * 0.8); }
+.gap2 { height: calc(var(--fs) * 2.6); }

@@ -1,0 +1,12 @@
+{#- hn-undangan: undangan pernikahan (dokumen sehari-hari). -#}
+{% extends "base.html.j2" %}
+{% block doc %}
+<div class="frame">
+  {{ m.ln(head, 'head') }}
+  <div class="intro">{{ m.para(intro) }}</div>
+  <div class="pengantin">{% for x in pengantin %}{{ m.ln(x, x.role) }}{% endfor %}</div>
+  <div class="acara">{% for x in acara %}{{ m.ln(x, x.role) }}{% endfor %}</div>
+  <div class="intro">{{ m.para(penutup) }}</div>
+  {{ m.ln(turut, 'turut') }}
+</div>
+{% endblock %}

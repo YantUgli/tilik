@@ -1,0 +1,6 @@
+/* kop-only */
+.kopwrap.center { text-align: center; }
+.kopcol { display: inline-block; text-align: center; }
+.kopcol .logo { margin-bottom: 10px; }
+.ln.kop { font-weight: bold; font-size: calc(var(--fs) * 1.05); }
+.ln.kop.last { border-bottom: 2px solid #111; padding-bottom: 3px; }

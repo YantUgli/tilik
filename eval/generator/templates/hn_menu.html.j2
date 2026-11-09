@@ -1,0 +1,14 @@
+{#- hn-menu: menu warung/kedai (dokumen sehari-hari). -#}
+{% extends "base.html.j2" %}
+{% block doc %}
+<div class="menu">
+  <div class="center">{% for x in head %}{{ m.ln(x, x.role) }}{% endfor %}</div>
+  {% for sec in sections %}
+  <div class="section">
+    {{ m.ln(sec.title, 'sub') }}
+    {% for x in sec.rows %}{{ m.cols(x) }}{% endfor %}
+  </div>
+  {% endfor %}
+  <div class="center foot">{{ m.ln(foot) }}</div>
+</div>
+{% endblock %}

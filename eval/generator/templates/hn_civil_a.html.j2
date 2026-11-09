@@ -1,0 +1,21 @@
+{#- hn-civil-a: naskah dinas pemda fiktif (hard negative). Kop tengah dengan logo kiri, alamat, garis ganda. -#}
+{% extends "base.html.j2" %}
+{% block doc %}
+<div class="kopblock">
+  {{ m.logo(logo) }}
+  <div class="kopcol">{% for x in kop %}{{ m.ln(x, 'kop' ~ loop.index) }}{% endfor %}{{ m.ln(alamat, 'alamat') }}</div>
+</div>
+<div class="rule"></div>
+<div class="tgl">{{ m.ln(tempat_tgl) }}</div>
+<div class="meta">
+  <div class="fields">{% for x in fields %}{{ m.row(x) }}{% endfor %}</div>
+  <div class="kepada">{% for x in kepada %}{{ m.ln(x) }}{% endfor %}</div>
+</div>
+<div class="body">{% for x in body %}{{ m.para(x, 'indent1') }}{% endfor %}</div>
+<div class="ttdblock">
+  {% for x in ttd %}{{ m.ln(x) }}{% endfor %}
+  <div class="gap2"></div>
+  {% for x in ttd_nama %}{{ m.ln(x, 'nama' if loop.first else '') }}{% endfor %}
+</div>
+<div class="tembusan">{% for x in tembusan %}{{ m.ln(x) }}{% endfor %}</div>
+{% endblock %}

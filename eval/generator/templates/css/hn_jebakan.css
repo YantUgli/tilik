@@ -1,0 +1,8 @@
+/* hn-jebakan */
+.poster { margin-top: 60px; text-align: center; border: 10px solid var(--accent); padding: 70px 50px; min-height: 1300px; }
+.title { font-weight: bold; font-size: calc(var(--fs) * 3.0); color: var(--accent); line-height: 1.15; }
+.sub { font-size: calc(var(--fs) * 1.5); margin: calc(var(--fs) * 1.2) 0; }
+.isi { font-size: calc(var(--fs) * 1.0); }
+.isi .ln { margin: 10px 0; }
+.extra { margin-top: calc(var(--fs) * 2.0); padding-top: calc(var(--fs) * 1.0); border-top: 3px dashed var(--accent); font-size: calc(var(--fs) * 0.9); }
+.extra .para { font-weight: bold; color: var(--accent); }

@@ -1,0 +1,15 @@
+{#- hn-struk: struk belanja (dokumen sehari-hari), kolom sempit di tengah halaman. -#}
+{% extends "base.html.j2" %}
+{% block doc %}
+<div class="receipt">
+  <div class="center">{% for x in head %}{{ m.ln(x, x.role) }}{% endfor %}</div>
+  <div class="sep"></div>
+  {% for x in meta_rows %}{% if x.cols is defined %}{{ m.cols(x) }}{% else %}{{ m.ln(x) }}{% endif %}{% endfor %}
+  <div class="sep"></div>
+  {% for x in rows %}{% if x.cols is defined %}{{ m.cols(x, 'qty') }}{% else %}{{ m.ln(x) }}{% endif %}{% endfor %}
+  <div class="sep"></div>
+  {% for x in total %}{{ m.cols(x, x.role) }}{% endfor %}
+  <div class="sep"></div>
+  <div class="center">{% for x in foot %}{{ m.ln(x) }}{% endfor %}</div>
+</div>
+{% endblock %}

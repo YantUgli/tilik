@@ -1,0 +1,19 @@
+{#- hn-civil-b: naskah kampus fiktif (hard negative). Kop rata kiri di samping logo, nomor kiri + tanggal kanan. -#}
+{% extends "base.html.j2" %}
+{% block doc %}
+<div class="kopblock">
+  {{ m.logo(logo) }}
+  <div class="kopcol">{% for x in kop %}{{ m.ln(x, 'kop' ~ loop.index) }}{% endfor %}{{ m.ln(alamat, 'alamat') }}</div>
+</div>
+<div class="rule"></div>
+<div class="tgl">{{ m.ln(tempat_tgl) }}</div>
+<div class="fields">{% for x in fields %}{{ m.row(x) }}{% endfor %}</div>
+<div class="kepada">{% for x in kepada %}{{ m.ln(x) }}{% endfor %}</div>
+<div class="body">{% for x in body %}{{ m.para(x) }}{% endfor %}</div>
+<div class="ttdblock">
+  {% for x in ttd %}{{ m.ln(x) }}{% endfor %}
+  <div class="gap2"></div>
+  {% for x in ttd_nama %}{{ m.ln(x) }}{% endfor %}
+</div>
+<div class="tembusan">{% for x in tembusan %}{{ m.ln(x) }}{% endfor %}</div>
+{% endblock %}

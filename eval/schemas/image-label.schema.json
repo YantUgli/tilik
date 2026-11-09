@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tilik.local/eval/schemas/image-label.schema.json",
+  "title": "TILIK eval — label gambar (lapis L3)",
+  "description": "Skema label gambar sesuai docs/eval-plan.md §3.1. Field `boxes` adalah tambahan generator sintetis (T-29): bbox DOM per baris, dipakai untuk evaluasi redaksi dan untuk menurunkan `redact_boxes`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "item_id", "file", "sha256", "group_id", "source", "template_id",
+    "has_dinas_doc", "doc_elements", "neg_type", "expected_risk", "legibility",
+    "gt_text_file", "redact_boxes", "augment", "notes"
+  ],
+  "properties": {
+    "item_id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+    "file": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "group_id": {"type": "string", "minLength": 1},
+    "source": {"enum": ["synthetic", "augmented", "staged", "screenshot"]},
+    "template_id": {"type": ["string", "null"]},
+    "has_dinas_doc": {"type": "boolean"},
+    "doc_elements": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["kop_satuan", "klasifikasi", "surat_telegram", "blok_alamat", "derajat"]}
+    },
+    "neg_type": {"enum": ["civil_naskah", "everyday", "trap", null]},
+    "expected_risk": {"enum": ["aman", "perhatian", "tinggi"]},
+    "legibility": {"enum": ["high", "low"]},
+    "gt_text_file": {"type": ["string", "null"]},
+    "redact_boxes": {
+      "type": ["array", "null"],
+      "items": {"$ref": "#/$defs/relbox"}
+    },
+    "augment": {"type": ["object", "null"]},
+    "notes": {"type": "string"},
+    "boxes": {
+      "type": "array",
+      "description": "Satu entri per baris teks, urut baca (sama dengan urutan baris di gt_text_file).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text", "box", "role", "element", "sensitive"],
+        "properties": {
+          "text": {"type": "string"},
+          "box": {"$ref": "#/$defs/relbox"},
+          "role": {"type": "string"},
+          "element": {"enum": ["kop_satuan", "klasifikasi", "surat_telegram", "blok_alamat", "derajat", null]},
+          "sensitive": {"type": "boolean"}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"has_dinas_doc": {"const": true}}},
+      "then": {"properties": {"neg_type": {"const": null}}}
+    },
+    {
+      "if": {"properties": {"has_dinas_doc": {"const": false}}},
+      "then": {"properties": {"neg_type": {"enum": ["civil_naskah", "everyday", "trap"]}}}
+    }
+  ],
+  "$defs": {
+    "relbox": {
+      "type": "array",
+      "description": "[x, y, w, h] relatif terhadap lebar/tinggi gambar, 0..1",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {"type": "number", "minimum": 0, "maximum": 1}
+    }
+  }
+}

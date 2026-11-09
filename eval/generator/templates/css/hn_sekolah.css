@@ -1,0 +1,11 @@
+/* hn-sekolah */
+.kopblock { display: grid; grid-template-columns: 130px 1fr; column-gap: 16px; align-items: center; }
+.kopcol { text-align: center; }
+.ln.kop1 { font-weight: bold; font-size: calc(var(--fs) * 1.3); color: #1b5e20; }
+.ln.kop2, .ln.kop3 { font-size: calc(var(--fs) * 0.8); }
+.rule { border-top: 3px solid #1b5e20; margin: 10px 0; }
+.tgl { text-align: right; margin-bottom: calc(var(--fs) * 0.6); }
+.fields { --kw: 5.5em; }
+.kepada { margin: calc(var(--fs) * 1.0) 0; }
+.body .para { margin-bottom: calc(var(--fs) * 0.5); }
+.ttdblock { margin-top: calc(var(--fs) * 1.2); display: table; min-width: 42%; margin-left: auto; margin-right: 0; }

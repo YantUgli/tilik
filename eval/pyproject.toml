@@ -1,0 +1,20 @@
+[project]
+name = "tilik-eval"
+version = "0.1.0"
+description = "TILIK eval: generator dokumen sintetis, data, dan skrip evaluasi"
+requires-python = ">=3.11"
+dependencies = [
+    "jinja2>=3.1",
+    "playwright>=1.48",
+    "pyyaml>=6",
+]
+
+[dependency-groups]
+dev = [
+    "jsonschema>=4.23",
+    "pytest>=8",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

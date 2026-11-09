@@ -1,0 +1,21 @@
+/* st-a */
+.head { display: grid; grid-template-columns: 1fr auto; column-gap: 40px; align-items: start; }
+.head.left { grid-template-columns: auto 1fr; }
+.head.left .ruang { order: -1; }
+.kopcol { text-align: center; justify-self: start; }
+.head.left .kopcol { justify-self: end; }
+.kopcol .logo { margin-bottom: 10px; }
+.ln.kop { font-weight: bold; font-size: calc(var(--fs) * 1.0); }
+.ln.kop.last { text-decoration: underline; text-underline-offset: 4px; }
+.ruang { --kw: 7.5em; margin-top: 140px; font-size: calc(var(--fs) * 0.95); }
+.titlebox { text-align: center; margin: calc(var(--fs) * 1.6) 0 calc(var(--fs) * 1.2); }
+.ln.title { font-weight: bold; font-size: calc(var(--fs) * 1.35); text-decoration: underline; text-underline-offset: 5px; }
+.nomor { --kw: auto; }
+.nomor .k { width: auto; }
+.alamat { --kw: 7.5em; }
+.rule { border-top: 2px solid #222; margin: calc(var(--fs) * 0.8) 0; }
+.isi .para { margin-bottom: calc(var(--fs) * 0.35); text-align: left; }
+.ttdblock { --kw: 10.5em; margin-top: calc(var(--fs) * 1.2); display: table; min-width: 42%; margin-left: auto; margin-right: 0; }
+.ttdblock .nama { font-weight: bold; text-decoration: underline; }
+.stamp-wrap.top { margin-bottom: 18px; }
+.stamp-wrap.bottom { position: absolute; left: 0; right: 0; bottom: 80px; }

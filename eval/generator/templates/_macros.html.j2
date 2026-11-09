@@ -1,0 +1,22 @@
+{#- Setiap baris teks yang terlihat = satu elemen .ln (GT, bbox, innerText). -#}
+{% macro attrs(x) -%}
+data-role="{{ x.role or 'body' }}"{% if x.el %} data-el="{{ x.el }}"{% endif %}{% if x.s %} data-s="1"{% endif %}
+{%- endmacro %}
+{% macro ln(x, cls='') -%}
+<div class="ln {{ cls }}" {{ attrs(x) }}>{{ x.t }}</div>
+{%- endmacro %}
+{% macro row(x, cls='') -%}
+<div class="ln row {{ cls }}" {{ attrs(x) }}><span class="k">{{ x.k }}</span><span class="c">{{ ' : ' if x.k else '' }}</span><span class="v">{{ x.v }}</span></div>
+{%- endmacro %}
+{% macro cols(x, cls='') -%}
+<div class="ln cols {{ cls }}" {{ attrs(x) }}>{% for c in x.cols %}{% if not loop.first %} {% endif %}<span class="col{{ loop.index }}">{{ c }}</span>{% endfor %}</div>
+{%- endmacro %}
+{% macro para(x, cls='') -%}
+<div class="para {{ cls }}" {{ attrs(x) }}{% if x.prefix %} data-prefix="{{ x.prefix }}"{% endif %}>{{ x.t }}</div>
+{%- endmacro %}
+{% macro logo(x, cls='') -%}
+<div class="logo {{ cls }}">{{ ln(x) }}</div>
+{%- endmacro %}
+{% macro stamp(x, cls='') -%}
+{% if x %}<div class="stamp-wrap {{ cls }}">{{ ln(x, 'stamp') }}</div>{% endif %}
+{%- endmacro %}

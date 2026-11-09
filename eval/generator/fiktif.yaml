@@ -1,0 +1,244 @@
+# Bank data FIKTIF untuk generator dokumen sintetis (T-29).
+#
+# - Semua nama satuan, pejabat, nomor, alamat, dan instansi di sini dikarang.
+#   Nomor satuan sengaja memakai blok 99x/99xx dan angka romawi Kodam >= XXXI,
+#   yang tidak dipakai satuan nyata. Nama satuan diberi akhiran yang jelas fiktif.
+# - Isi kalimat netral (latihan, administrasi, kegiatan sosial). Tidak ada kalimat
+#   yang disalin dari Surat Telegram asli yang diberitakan media.
+# - eval/tests/test_generator.py::test_no_real_units memindai file ini terhadap
+#   daftar_hitam.txt.
+
+satuan:
+  akhiran: [CONTOH, FIKTIF, PERAGAAN, SIMULASI, PURWARUPA, MAKET]
+  kodam_romawi: [XXXI, XXXIV, XXXVII, XL, XLII, XLV]
+  korem_nomor: [990, 991, 993, 995, 997, 998, 999]
+  kodim_nomor: [9901, 9905, 9912, 9920, 9934, 9947, 9958, 9999]
+  yonif_nomor: [990, 992, 994, 996, 999]
+  korps_yonif: [INFANTERI, INFANTERI MEKANIS, ZENI TEMPUR, ARTILERI MEDAN]
+
+pejabat:
+  nama_depan: [ADI, BAGAS, CAHYO, DIMAS, FAJAR, GILANG, HARIS, IRVAN, LUTFI, NANDA, RAKA, SATRIA, TEGAR, WAHYU, YOGA]
+  nama_belakang: [CONTOHARJO, FIKTIADI, PERAGANTO, SIMULANTO, MAKETONO, PURWARUPANTO, SAMPELWANTO, CONTOHWIBOWO]
+  pangkat_perwira: [LETTU, KAPTEN, MAYOR, LETKOL, KOLONEL]
+  korps: [INF, CZI, ARM, KAV, CHB, CKM]
+
+kota: [KOTA CONTOH, KABUPATEN FIKTIF, KOTA PERAGAAN, KABUPATEN SIMULASI, KOTA MAKET]
+
+bulan: [Januari, Februari, Maret, April, Mei, Juni, Juli, Agustus, September, Oktober, November, Desember]
+
+# Kalimat isi naskah dinas militer fiktif. Ditulis kalimat biasa; template ST
+# mengubahnya menjadi huruf kapital (dan gaya TTK/KMA untuk st-b, st-c).
+kegiatan:
+  latihan:
+    - judul: latihan kesegaran jasmani berkala semester II
+      kalimat:
+        - Dalam rangka menjaga kondisi fisik personel, satuan melaksanakan latihan kesegaran jasmani berkala semester II.
+        - Seluruh personel agar mengikuti tes kesegaran jasmani sesuai jadwal yang ditentukan oleh bagian latihan.
+        - Personel yang berhalangan karena sakit agar melampirkan surat keterangan dari petugas kesehatan satuan.
+    - judul: latihan menembak senjata ringan triwulan IV
+      kalimat:
+        - Latihan menembak senjata ringan triwulan IV dilaksanakan untuk mempertahankan kemampuan dasar keprajuritan.
+        - Bagian logistik agar menyiapkan sasaran latihan, alat keselamatan, dan daftar hadir peserta.
+        - Hasil latihan dilaporkan secara tertulis paling lambat tujuh hari setelah kegiatan selesai.
+    - judul: latihan penanggulangan bencana alam
+      kalimat:
+        - Satuan menyelenggarakan latihan penanggulangan bencana alam bersama relawan dan perangkat kelurahan.
+        - Materi latihan meliputi evakuasi warga, pertolongan pertama, dan pendirian dapur umum.
+        - Komandan regu agar memastikan kelengkapan perorangan sesuai daftar periksa latihan.
+  administrasi:
+    - judul: pemutakhiran data personel
+      kalimat:
+        - Dalam rangka tertib administrasi, setiap subsatuan agar memutakhirkan data personel dan keluarga.
+        - Formulir yang telah diisi dikumpulkan kepada bagian personalia dalam bentuk cetak dan berkas digital.
+        - Data yang dikirimkan agar diperiksa kembali kebenarannya oleh perwira seksi personel.
+    - judul: inventarisasi barang milik negara
+      kalimat:
+        - Setiap subsatuan agar melaksanakan inventarisasi barang milik negara yang berada di lingkungan kerjanya.
+        - Barang dalam kondisi rusak berat agar dicatat tersendiri untuk diusulkan penghapusannya.
+        - Laporan inventarisasi ditandatangani kepala subsatuan dan diserahkan kepada bagian logistik.
+    - judul: penertiban arsip dan surat menyurat
+      kalimat:
+        - Untuk mendukung tertib administrasi, seluruh bagian agar menata arsip surat masuk dan surat keluar.
+        - Arsip yang telah melewati masa simpan agar didata untuk diusulkan pemusnahannya sesuai ketentuan.
+        - Petugas tata usaha agar mengikuti pembekalan pengelolaan arsip yang diselenggarakan bagian umum.
+    - judul: pengajuan kebutuhan alat tulis kantor
+      kalimat:
+        - Setiap bagian agar mengajukan kebutuhan alat tulis kantor untuk satu semester ke depan.
+        - Pengajuan disusun menggunakan format yang telah ditentukan dan ditandatangani kepala bagian.
+        - Bagian keuangan akan merekapitulasi seluruh pengajuan sebelum dilakukan pengadaan.
+  sosial:
+    - judul: kegiatan donor darah dalam rangka hari jadi satuan
+      kalimat:
+        - Dalam rangka hari jadi satuan, diselenggarakan kegiatan donor darah bekerja sama dengan unit transfusi darah setempat.
+        - Personel dan keluarga yang memenuhi syarat kesehatan dapat mendaftar melalui petugas kesehatan satuan.
+        - Panitia agar menyiapkan tempat, konsumsi ringan, dan petugas pendaftaran.
+    - judul: kerja bakti pembersihan saluran air
+      kalimat:
+        - Menjelang musim hujan, satuan melaksanakan kerja bakti pembersihan saluran air bersama warga sekitar.
+        - Setiap subsatuan agar mengirimkan personel dengan membawa alat kebersihan masing-masing.
+        - Kegiatan dikoordinasikan dengan perangkat kelurahan dan ketua lingkungan setempat.
+    - judul: bakti sosial pengobatan gratis
+      kalimat:
+        - Satuan menyelenggarakan bakti sosial pengobatan gratis bagi masyarakat di wilayah binaan.
+        - Petugas kesehatan satuan agar menyiapkan obat-obatan umum dan alat pemeriksaan sederhana.
+        - Pelaksanaan kegiatan dilaporkan beserta jumlah warga yang dilayani.
+    - judul: penanaman pohon di lingkungan asrama
+      kalimat:
+        - Dalam rangka penghijauan, satuan melaksanakan penanaman pohon di lingkungan asrama dan kantor.
+        - Bibit pohon disediakan oleh bagian logistik dan dibagikan kepada setiap subsatuan.
+        - Setiap subsatuan bertanggung jawab merawat pohon yang ditanam di wilayahnya.
+
+penutup_st:
+  - Demikian untuk dilaksanakan dan dilaporkan.
+  - Demikian untuk menjadi perhatian dan dilaksanakan.
+  - Demikian untuk diketahui dan dipedomani.
+
+penutup_surat:
+  - Demikian untuk menjadi maklum.
+  - Demikian disampaikan, atas perhatiannya diucapkan terima kasih.
+  - Demikian untuk dilaksanakan dengan penuh tanggung jawab.
+
+# ---------------------------------------------------------------------------
+# Naskah sipil (hard negative civil_naskah) — instansi fiktif
+sipil:
+  pemda:
+    - instansi: [PEMERINTAH KABUPATEN CONTOH, DINAS KOMUNIKASI DAN INFORMATIKA]
+      kode: Diskominfo
+      kepala: KEPALA DINAS KOMUNIKASI DAN INFORMATIKA
+    - instansi: [PEMERINTAH KOTA FIKTIF, BADAN PERENCANAAN PEMBANGUNAN DAERAH]
+      kode: Bappeda
+      kepala: KEPALA BADAN PERENCANAAN PEMBANGUNAN DAERAH
+    - instansi: [PEMERINTAH KABUPATEN PERAGAAN, SEKRETARIAT DAERAH]
+      kode: Setda
+      kepala: SEKRETARIS DAERAH
+  kampus:
+    - instansi: [UNIVERSITAS CONTOH NUSANTARA, FAKULTAS ILMU KOMPUTER FIKTIF]
+      kode: UCN.3
+      kepala: DEKAN
+    - instansi: [INSTITUT TEKNOLOGI PERAGAAN, LEMBAGA PENELITIAN DAN PENGABDIAN]
+      kode: ITP.LP
+      kepala: KETUA LEMBAGA
+    - instansi: [POLITEKNIK SIMULASI NEGERI, BAGIAN AKADEMIK DAN KEMAHASISWAAN]
+      kode: PSN.AK
+      kepala: KEPALA BAGIAN
+  alamat:
+    - Jalan Merpati Fiktif No. 99, Kota Contoh 99999
+    - Jalan Contoh Raya Km. 9, Kabupaten Fiktif 99990
+    - Jalan Peragaan No. 1, Kota Peragaan 99901
+  perihal:
+    - Undangan Rapat Koordinasi Penyusunan Program Kerja
+    - Permohonan Data Pendukung Laporan Tahunan
+    - Penyampaian Jadwal Pelatihan Pengelolaan Arsip
+    - Undangan Sosialisasi Layanan Informasi Publik
+  kalimat:
+    - Sehubungan dengan penyusunan program kerja tahun anggaran berikutnya, kami mengundang Bapak/Ibu untuk hadir pada rapat koordinasi.
+    - Mohon kesediaan Bapak/Ibu untuk menyampaikan data pendukung sesuai format terlampir paling lambat akhir bulan ini.
+    - Kegiatan akan dilaksanakan di ruang rapat utama dengan menerapkan tata tertib yang berlaku.
+    - Untuk kelancaran kegiatan, peserta diharapkan membawa bahan paparan masing-masing.
+    - Informasi lebih lanjut dapat menghubungi sekretariat pada jam kerja.
+  nama:
+    - Dra. Sri Contohwati, M.Si.
+    - Dr. Ir. Bayu Fiktiansyah, M.T.
+    - Hendra Peragawan, S.H., M.H.
+    - Prof. Dr. Lestari Simulasih
+
+# ---------------------------------------------------------------------------
+# Dokumen sehari-hari (hard negative everyday) dan kata jebakan (trap)
+rt:
+  wilayah: [RT 099 / RW 009, RT 012 / RW 099, RT 090 / RW 019]
+  kelurahan: [KELURAHAN CONTOH JAYA, KELURAHAN FIKTIF INDAH, DESA PERAGAAN]
+  acara:
+    - judul: Kerja Bakti Lingkungan
+      isi: Dalam rangka menjaga kebersihan lingkungan, warga diundang mengikuti kerja bakti membersihkan selokan dan taman.
+    - judul: Rapat Warga Bulanan
+      isi: Mengundang Bapak/Ibu warga untuk menghadiri rapat bulanan membahas iuran kebersihan dan jadwal ronda.
+    - judul: Lomba Tujuh Belasan
+      isi: Panitia lomba mengajak putra-putri warga mendaftar lomba balap karung, makan kerupuk, dan tarik tambang.
+  ketua: [Bapak Slamet Contoh, Ibu Ratna Fiktif, Bapak Darmo Peraga]
+
+sekolah:
+  nama: [SD NEGERI 999 CONTOH, SMP NEGERI 99 FIKTIF, SMA SWASTA PERAGAAN]
+  hal:
+    - judul: Pemberitahuan Libur Semester
+      isi: Diberitahukan bahwa kegiatan belajar mengajar diliburkan selama dua minggu dan siswa masuk kembali sesuai kalender pendidikan.
+    - judul: Undangan Rapat Komite Sekolah
+      isi: Mengharap kehadiran Bapak/Ibu orang tua/wali murid pada rapat komite untuk membahas program kegiatan sekolah.
+    - judul: Kegiatan Karyawisata
+      isi: Sekolah akan mengadakan karyawisata edukatif ke museum kota. Orang tua dimohon mengisi surat persetujuan terlampir.
+  kepala: ["Drs. Agus Contohno", "Siti Fiktiyah, S.Pd.", "Bambang Peragawan, M.Pd."]
+
+undangan:
+  pasangan:
+    - [Rina Contohwati, Dimas Fiktiawan]
+    - [Ayu Peragasari, Bima Simulanto]
+    - [Nadia Sampelia, Reza Maketono]
+  ortu:
+    - Bapak Hasan Contoh & Ibu Lina
+    - Bapak Joko Fiktif & Ibu Sari
+    - Bapak Made Peraga & Ibu Komang
+  tempat:
+    - Gedung Serbaguna Contoh, Jalan Melati No. 9
+    - Balai Warga Fiktif Indah
+    - Kediaman mempelai, Perumahan Peragaan Blok C-9
+
+struk:
+  toko: [TOKO SERBA CONTOH, MINIMARKET FIKTIF 24, KOPERASI WARGA PERAGAAN]
+  barang:
+    - [Beras 5 kg, 68500]
+    - [Minyak goreng 2 L, 34900]
+    - [Gula pasir 1 kg, 16500]
+    - [Telur ayam 1 kg, 28000]
+    - [Kopi bubuk 200 g, 21500]
+    - [Sabun cuci piring, 12900]
+    - [Mi instan isi 5, 15500]
+    - ["Air mineral 1,5 L", 6000]
+    - [Teh celup isi 25, 9800]
+    - [Susu UHT 1 L, 18900]
+
+menu:
+  nama: [WARUNG KOPI FIKTIF, KEDAI CONTOH RASA, DAPUR PERAGAAN]
+  makanan:
+    - [Nasi goreng spesial, 25000]
+    - [Mi ayam bakso, 20000]
+    - [Ayam geprek sambal matah, 23000]
+    - [Pisang goreng keju, 15000]
+    - [Roti bakar cokelat, 14000]
+    - [Kentang goreng, 15000]
+  minuman:
+    - [Kopi susu gula aren, 18000]
+    - [Es teh manis, 6000]
+    - [Jus alpukat, 15000]
+    - [Wedang jahe, 10000]
+    - [Teh tarik, 12000]
+
+jebakan:
+  - judul: RESEP RAHASIA
+    sub: Ayam Goreng Bu Contoh
+    isi:
+      - Bumbu turun-temurun sejak 1999
+      - Renyah di luar, empuk di dalam
+      - Buka setiap hari pukul 10.00-21.00
+  - judul: EDISI TERBATAS
+    sub: Kaus Lari Fiktif Run 2026
+    isi:
+      - Hanya 200 potong untuk peserta awal
+      - Ukuran S sampai XXL
+      - Pemesanan melalui panitia
+  - judul: SEGERA HADIR DI KOTA ANDA
+    sub: Toko Buku Peragaan Cabang Baru
+    isi:
+      - Diskon pembukaan untuk semua buku
+      - Lokasi di Jalan Contoh No. 99
+      - Ikuti media sosial kami untuk info terbaru
+  - judul: Gabung grup Telegram kami
+    sub: Komunitas Pecinta Tanaman Fiktif
+    isi:
+      - Tukar bibit dan tips merawat tanaman
+      - Gratis untuk semua anggota
+      - t.me/contohtanamanfiktif
+  - judul: PROMO KILAT AKHIR PEKAN
+    sub: Laundry Kiloan Contoh Bersih
+    isi:
+      - Cuci setrika hanya Rp6.000/kg
+      - Antar jemput gratis area Kota Contoh
+      - Segera daftar jadi pelanggan tetap
