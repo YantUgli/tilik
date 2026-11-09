@@ -17,7 +17,9 @@
   applies_to: [caption, ocr]
   match:
     any_regex:
-      - '(?i)\b(berangkat|bergerak|geser|pergeseran|pemberangkatan|kepulangan|tiba|kumpul|apel)\b'
+      # `tiba` dikecualikan bila menempel tanda hubung (tiba-tiba); lookaround, bukan
+      # negative_context, supaya kemunculan `tiba` lain di teks yang sama tetap menyala.
+      - '(?i)\b(berangkat|bergerak|geser|pergeseran|pemberangkatan|kepulangan|(?<!-)tiba(?!-)|kumpul|apel)\b'
     require_context:
       - '(?i)\b(satgas|yonif|batalyon|kompi|peleton|pasukan|satuan|penugasan|pamtas|operasi|rotasi)\b'
     negative_context:
@@ -32,11 +34,13 @@
       # kata penyusun negative_context ada, tetapi tidak membentuk frasanya
       - "Ayah berangkat penugasan besok pagi. Adik juga mulai sekolah"
       - "Kumpul di batalyon jam 05.00, keluarga boleh antar"
+      - "Satgas Yonif 999/Contoh tiba di pelabuhan hari ini"
     negative:
       - "Besok berangkat sekolah jam 6, pasukan semut di dapur"
       - "Akhirnya kumpul keluarga lagi setelah rotasi kerja"
       - "Berangkat liburan ke pantai!"
       - "Satgas Yonif 999/Contoh hebat"
+      - "Tiba-tiba hujan, untung satuan tugas sudah pulang"
 
 - id: R-L4-002
   layer: L4
@@ -141,16 +145,25 @@
   applies_to: [caption, ocr]
   match:
     any_regex:
-      - '(?<!\d)(?:\+62|62|0)8\d{8,11}(?!\d)'
+      # 8-11 digit setelah `8`; boleh satu pemisah (strip, titik, spasi) di antara digit.
+      - '(?<!\d)(?:\+62[-. ]?|62[-. ]?|0)8(?:[-. ]?\d){8,11}(?!\d)'
   message: "Ada nomor HP di teks."
   explanation: "Nomor HP di unggahan publik membuka risiko penipuan dan doxxing."
   tests:
     positive:
       - "info lebih lanjut wa 081234567890"
       - "hubungi +6281234567890 ya"
+      - "wa 0812-3456-7890"
+      - "telp 0812 3456 7890"
+      - "hubungi +62 812-3456-7890"
+      - "kontak 62.812.3456.7890"
     negative:
       - "kode pos 12345"
       - "nomor 0812345"
+      - "tanggal 08-12-2026"
+      - "jam 08.30 - 10.00"
+      - "skor 0 8 1 2"
+      - "0812--3456--7890"
 
 - id: R-L4-007
   layer: L4

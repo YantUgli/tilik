@@ -126,3 +126,18 @@ def test_kata_lepas_tidak_mematikan_aturan():
     caption = "Satgas Yonif 999/Contoh berangkat besok dari pelabuhan. Adik ke sekolah, mama ke kantor"
     found = ENGINE.run(RuleInput(caption=caption, ocr_text=None, ocr_words=None))
     assert "R-L4-001" in {f["rule_ref"] for f in found}
+
+
+@pytest.mark.parametrize("nomor", [
+    "081234567890", "0812-3456-7890", "0812 3456 7890", "+62 812-3456-7890", "62.812.3456.7890",
+])
+def test_hp_berpemisah_evidence_utuh(nomor):
+    found = ENGINE.run(RuleInput(caption=f"wa {nomor} ya", ocr_text=None, ocr_words=None))
+    assert [f["evidence"]["text"] for f in found if f["rule_ref"] == "R-L4-006"] == [nomor]
+
+
+def test_tiba_tiba_tidak_menutupi_tiba():
+    """Pengecualian tiba-tiba lewat lookaround: kemunculan `tiba` lain tetap menyala."""
+    caption = "Tiba-tiba hujan. Satgas Yonif 999/Contoh tiba di pelabuhan hari ini"
+    found = ENGINE.run(RuleInput(caption=caption, ocr_text=None, ocr_words=None))
+    assert [f["evidence"]["text"] for f in found if f["rule_ref"] == "R-L4-001"] == ["tiba"]
