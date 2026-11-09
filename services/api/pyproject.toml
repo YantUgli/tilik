@@ -9,6 +9,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28",
     "jsonschema>=4.23",
     "pytest>=8",
 ]
