@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "TILIK API: rule engine dan analisis caption/visual"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.115",
+    "pydantic>=2",
     "pyyaml>=6",
+    "slowapi>=0.1.9",
+    "uvicorn[standard]>=0.32",
 ]
 
 [dependency-groups]
