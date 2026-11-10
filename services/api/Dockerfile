@@ -1,0 +1,26 @@
+# Image TILIK API untuk Hugging Face Spaces (SDK Docker). Build context: services/api/.
+FROM python:3.12-slim
+
+COPY --from=ghcr.io/astral-sh/uv:0.11.20 /uv /bin/uv
+
+# HF Spaces menjalankan container sebagai UID 1000; jangan jalan sebagai root.
+RUN useradd --create-home --uid 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/app/.venv/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
+WORKDIR /home/user/app
+
+COPY --chown=user pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY --chown=user app ./app
+COPY --chown=user rules_engine ./rules_engine
+COPY --chown=user rules ./rules
+
+EXPOSE 7860
+# --no-access-log: log akses bawaan uvicorn diganti log tilik.access tanpa konten (NFR-PRIV-01).
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860", "--no-access-log"]
