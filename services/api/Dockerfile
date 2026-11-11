@@ -1,9 +1,10 @@
-# Image TILIK API untuk Hugging Face Spaces (SDK Docker). Build context: services/api/.
+# Image TILIK API untuk uji lokal dan profil self-hosted. Build context: services/api/.
+# Demo publik di FastAPI Cloud, yang mengabaikan Dockerfile (lihat deploy/README.md).
 FROM python:3.12-slim
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.20 /uv /bin/uv
 
-# HF Spaces menjalankan container sebagai UID 1000; jangan jalan sebagai root.
+# Jangan jalan sebagai root.
 RUN useradd --create-home --uid 1000 user
 USER user
 ENV HOME=/home/user \

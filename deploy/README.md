@@ -1,50 +1,63 @@
 # Deploy TILIK (hello-world end-to-end)
 
-Jalur: **Vercel** (`apps/web`) → **Hugging Face Spaces** (`services/api`, Docker) → provider LLM (belum dipakai di stub).
+Jalur: **Vercel** (`apps/web`) → **FastAPI Cloud** (`services/api`) → provider LLM (belum dipakai di stub).
 
-## 1. Backend di Hugging Face Spaces
+FastAPI Cloud membangun app dari `services/api/pyproject.toml` + `uv.lock` dan menjalankan
+`app.main:app` (`[tool.fastapi] entrypoint`). `Dockerfile` **diabaikan** di sana; Dockerfile
+hanya untuk uji lokal dan profil self-hosted.
 
-1. Di huggingface.co: **New Space** → SDK **Docker** → template **Blank** → visibilitas **Public**
-   (browser harus bisa memanggilnya tanpa token). Catat nama `<owner>/<space>`.
-   URL API nanti: `https://<owner>-<space>.hf.space`.
-2. **Settings → Variables and secrets**:
-   | Nama | Jenis | Nilai |
-   |---|---|---|
-   | `ALLOWED_ORIGINS` | Variable | `https://<project>.vercel.app,http://localhost:3000` (tanpa `/` di akhir, tanpa `*`) |
-   | `FIREWORKS_API_KEY` | **Secret** | key demo (bukan key `_EVAL_`) |
-   | `GROQ_API_KEY` | **Secret** | key demo |
+## 1. Backend di FastAPI Cloud
 
-   Domain preview Vercel (`<project>-git-…vercel.app`) **tidak** otomatis diizinkan; tambahkan
-   bila perlu menguji preview.
-3. Space hanya butuh isi `services/api/` (ada `Dockerfile` dan `README.md` berfrontmatter
-   `sdk: docker`, `app_port: 7860`). Dorong subfolder itu ke repo Space dari akar repo:
-   ```bash
-   git remote add hf https://huggingface.co/spaces/<owner>/<space>   # sekali saja
-   git subtree split --prefix services/api -b hf-space
-   git push hf hf-space:main --force
-   git branch -D hf-space
-   ```
-   Saat diminta password, pakai **access token HF** (role *write*), bukan password akun.
-   Ulangi tiga perintah terakhir setiap kali `services/api/` berubah.
-4. Tunggu status Space **Running** (tab *Logs* menampilkan `Uvicorn running on http://0.0.0.0:7860`).
+Paket Hobby gratis dibatasi **3 app** per akun. Cek dulu di dashboard
+FastAPI Cloud bahwa masih ada slot.
 
-> Space gratis **tidur** setelah lama tidak dipakai; request pertama setelahnya bisa butuh
-> puluhan detik (frontend memakai timeout 30 detik). Keep-alive dijadwalkan di T-22.
+```bash
+cd services/api
+unset VIRTUAL_ENV
+uv sync
+uv run fastapi login      # sekali; browser terbuka untuk autentikasi
+uv run fastapi deploy     # pilih team, lalu "create a new app", nama: tilik-api
+```
+
+- Upload menghormati `services/api/.gitignore` (`.env*`, `.venv/`, `scripts/probe/out/` tidak ikut).
+- Deploy pertama membuat folder `.fastapicloud/` (tautan ke app; di-.gitignore) dan mencetak URL
+  `https://<app>.fastapicloud.dev`.
+
+### Variabel dan secret
+
+```bash
+uv run fastapi cloud env set ALLOWED_ORIGINS "http://localhost:3000"
+uv run fastapi cloud env set FIREWORKS_API_KEY "<key-demo-fireworks>" --secret
+uv run fastapi cloud env set GROQ_API_KEY "<key-demo-groq>" --secret
+uv run fastapi deploy     # redeploy supaya env terbaca
+```
+
+- `ALLOWED_ORIGINS`: dipisah koma, tanpa `/` di akhir, **tanpa `*`** (app menolak start bila ada
+  wildcard). Setelah URL Vercel ada, set ulang menjadi
+  `https://<project>.vercel.app,http://localhost:3000` lalu redeploy.
+- Pakai key **demo**, bukan key `_EVAL_` (NFR-COST-04).
+- Perintah di atas masuk ke riwayat shell. Bila tidak mau, isi secret lewat dashboard
+  (app → *Environment Variables*, tandai sebagai secret).
+
+> App gratis **scale-to-zero** saat idle; request pertama setelahnya lebih lambat (cold start).
+> Frontend memakai timeout 30 detik. Ping berkala dijadwalkan di T-22.
+
+Redeploy setiap kali `services/api/` berubah: `cd services/api && uv run fastapi deploy`.
 
 ## 2. Frontend di Vercel
 
-1. **Add New → Project** → impor repo GitHub publik TILIK.
+1. **Add New → Project** → impor repo GitHub publik TILIK (push `main` dulu).
 2. **Root Directory**: `apps/web`. Framework terdeteksi Next.js; package manager pnpm.
 3. **Environment Variables** (Production dan Preview):
-   `NEXT_PUBLIC_API_URL = https://<owner>-<space>.hf.space` (tanpa `/` di akhir).
+   `NEXT_PUBLIC_API_URL = https://<app>.fastapicloud.dev` (tanpa `/` di akhir).
    Jangan pernah menaruh key apa pun di variabel `NEXT_PUBLIC_*`.
-4. Deploy. Bila URL produksi berbeda dari yang diisi di `ALLOWED_ORIGINS`, perbarui variabel
-   di Space (Space restart otomatis).
+4. Deploy, lalu tambahkan URL produksi Vercel ke `ALLOWED_ORIGINS` (langkah 1) dan redeploy API.
+   Domain preview Vercel (`<project>-git-…vercel.app`) **tidak** otomatis diizinkan.
 
 ## 3. Smoke test
 
 ```bash
-API=https://<owner>-<space>.hf.space
+API=https://<app>.fastapicloud.dev
 WEB=https://<project>.vercel.app
 
 # Health: 200 dan {"status":"ok",...}
@@ -71,8 +84,13 @@ yang lolos validasi kontrak.
 
 ## 4. Cek log
 
-Tab *Logs* Space hanya boleh berisi baris seperti:
+```bash
+cd services/api && uv run fastapi cloud logs
+```
+Log app hanya boleh berisi baris seperti:
 ```
 INFO tilik.access request_id=… method=POST path=/analyze/caption status=200 latency_ms=0
 ```
-Tidak boleh ada isi caption, teks OCR, query string, atau pesan exception (NFR-PRIV-01).
+Tidak boleh ada isi caption, teks OCR, query string, IP klien, atau pesan exception
+(NFR-PRIV-01). Log di level platform (proxy FastAPI Cloud) di luar kendali app; catat apa yang
+terlihat di dashboard untuk bagian privasi di report.

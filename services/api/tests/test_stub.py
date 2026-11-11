@@ -198,6 +198,22 @@ def test_logs_have_no_body(client: TestClient, caplog: pytest.LogCaptureFixture)
     assert all("latency_ms=" in line for line in access)
 
 
+def test_uvicorn_access_log_disabled() -> None:
+    """`fastapi run` (FastAPI Cloud) menyalakan access log uvicorn: IP klien + query string."""
+    access = logging.getLogger("uvicorn.access")
+    access.disabled = False
+    create_app(Settings())
+    assert access.disabled is True
+
+
+def test_fastapi_cloud_entrypoint() -> None:
+    import tomllib
+    from pathlib import Path
+
+    pyproject = tomllib.loads((Path(__file__).parents[1] / "pyproject.toml").read_text())
+    assert pyproject["tool"]["fastapi"]["entrypoint"] == "app.main:app"
+
+
 def test_unhandled_error_is_500_contract_and_not_logged(caplog: pytest.LogCaptureFixture) -> None:
     secret = "RAHASIA-EXCEPTION-55aa01"
     app = create_app(Settings(allowed_origins=[ALLOWED]))
