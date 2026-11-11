@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "TILIK API: rule engine dan analisis caption/visual"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115",
+    "fastapi[standard]>=0.115",
     "pydantic>=2",
     "pyyaml>=6",
     "slowapi>=0.1.9",
@@ -17,6 +17,10 @@ dev = [
     "jsonschema>=4.23",
     "pytest>=8",
 ]
+
+# FastAPI Cloud (`fastapi deploy`) membaca pyproject.toml + uv.lock; Dockerfile diabaikan.
+[tool.fastapi]
+entrypoint = "app.main:app"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

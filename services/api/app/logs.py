@@ -20,6 +20,10 @@ def configure_logging() -> None:
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
         root.addHandler(handler)
     root.setLevel(logging.INFO)
+    # Access log uvicorn memuat IP klien dan query string; `fastapi run` (FastAPI Cloud)
+    # menyalakannya tanpa bisa diberi flag. Uvicorn mengonfigurasi logging sebelum app
+    # diimpor, jadi mematikannya di sini bertahan. Penggantinya: tilik.access.
+    logging.getLogger("uvicorn.access").disabled = True
 
 
 def log_access(request_id: str, method: str, path: str, status: int, latency_ms: int) -> None:

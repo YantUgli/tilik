@@ -1,0 +1,9 @@
+# `fastapi deploy` menghormati .gitignore: apa pun di sini tidak ikut di-upload.
+.env
+.env.*
+.venv/
+__pycache__/
+.pytest_cache/
+scripts/probe/out/
+# Tautan lokal ke app FastAPI Cloud (id app/tim), dibuat oleh `fastapi deploy`.
+.fastapicloud/
