@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 import { prepareImages, type PreparedImages } from "@/lib/image/downscale";
-import { CAPTION_MAX, checkCaption } from "./caption";
+import { CAPTION_MAX, captionProblem, checkCaption } from "./caption";
 import { MESSAGES, validateImageFile } from "./validate-file";
 
 /** Input siap analisis. Semua tetap di memori browser; tidak ada yang disimpan ke storage. */
@@ -61,6 +61,7 @@ export function PhotoInput({ onSubmit }: Props) {
   };
 
   const cap = checkCaption(caption);
+  const capProblem = captionProblem(cap);
   const canSubmit = photo.phase === "ready" && cap.ok;
 
   const submit = () => {
@@ -110,8 +111,13 @@ export function PhotoInput({ onSubmit }: Props) {
       />
       <p id={ids.counter} className={`counter ${cap.ok ? "muted" : "status error"}`} aria-live="polite">
         {cap.count.toLocaleString("id-ID")}/{CAPTION_MAX.toLocaleString("id-ID")} karakter
-        {!cap.ok && " (terlalu panjang)"}
+        {!cap.ok && !capProblem && " (terlalu panjang)"}
       </p>
+      {capProblem && (
+        <p className="status error" role="alert">
+          {capProblem}
+        </p>
+      )}
 
       <button type="button" onClick={submit} disabled={!canSubmit}>
         Periksa
