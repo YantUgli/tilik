@@ -119,3 +119,66 @@ button:disabled {
   overflow-x: auto;
   max-height: 28rem;
 }
+
+/* T-11: input foto + caption (gaya sementara; tampilan final di T-24/T-50) */
+.input-card h2 {
+  margin-bottom: 0.25rem;
+}
+
+.field-label {
+  display: block;
+  font-weight: 600;
+  margin: 1rem 0 0.35rem;
+}
+
+input[type="file"],
+textarea {
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  resize: vertical;
+}
+
+textarea[aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+.counter {
+  margin: 0.25rem 0 1rem;
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+.preview {
+  margin: 1rem 0 0;
+}
+
+.preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 24rem;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.preview figcaption {
+  font-size: 0.875rem;
+  margin-top: 0.35rem;
+}
+
+.diagnostics {
+  margin-top: 2rem;
+}
+
+.diagnostics > h2 {
+  font-size: 1rem;
+}
