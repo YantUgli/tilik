@@ -5,6 +5,7 @@ description = "TILIK API: rule engine dan analisis caption/visual"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.115",
+    "httpx>=0.28",
     "pydantic>=2",
     "pyyaml>=6",
     "slowapi>=0.1.9",
@@ -25,3 +26,5 @@ entrypoint = "app.main:app"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "-m 'not live'"
+markers = ["live: memanggil provider sungguhan (butuh FIREWORKS_EVAL_API_KEY); dilewati default"]
