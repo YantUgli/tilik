@@ -36,15 +36,6 @@ def test_health_contract(client: TestClient) -> None:
     assert errors("health", res.json()) == []
 
 
-def test_caption_stub_contract(client: TestClient) -> None:
-    res = client.post("/analyze/caption", json=SAMPLE_CAPTION)
-    assert res.status_code == 200
-    body = res.json()
-    assert errors("caption-response", body) == []
-    assert [layer["status"] for layer in body["layers"]] == ["skipped"] * 3
-    assert all(layer["note"] == "stub T-08" for layer in body["layers"])
-
-
 def test_visual_stub_contract(client: TestClient) -> None:
     res = client.post(
         "/analyze/visual", files={"image": ("x.png", b"\x89PNG\r\n\x1a\n", "image/png")}

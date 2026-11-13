@@ -1,7 +1,7 @@
 """Aplikasi FastAPI TILIK.
 
-T-08: stub valid kontrak untuk /health, /analyze/caption, /analyze/visual. Isi analisis
-datang di T-18 (caption) dan T-21 (visual).
+/analyze/caption: rule engine + satu provider LLM teks (T-18, app/routes/caption.py).
+/analyze/visual masih stub valid kontrak (T-08); isinya datang di T-21.
 """
 
 from __future__ import annotations
@@ -17,7 +17,10 @@ from fastapi.responses import JSONResponse
 from app import __version__
 from app.config import Settings
 from app.logs import configure_logging, log_access, log_unhandled
-from app.schemas import CaptionRequest
+from app.routes.caption import build_caption_router
+from providers import TextProvider
+from providers.fireworks import FireworksText
+from rules_engine import RuleEngine, load_rules
 
 STUB_NOTE = "stub T-08"
 
@@ -37,8 +40,22 @@ def _skipped(layer: str, provider: str | None) -> dict:
     }
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def build_text_provider(settings: Settings) -> TextProvider | None:
+    """Fireworks bila key dan model terisi; selain itu None (L4 LLM `unavailable`)."""
+    if not settings.fireworks_api_key or not settings.fireworks_text_model:
+        return None
+    return FireworksText(
+        api_key=settings.fireworks_api_key,
+        model=settings.fireworks_text_model,
+        max_tokens=settings.text_max_tokens,
+    )
+
+
+def create_app(settings: Settings | None = None, text_provider: TextProvider | None = None) -> FastAPI:
     settings = settings if settings is not None else Settings.from_env()
+    if text_provider is None:
+        text_provider = build_text_provider(settings)
+    rule_engine = RuleEngine(load_rules())  # regex dikompilasi sekali saat startup
     configure_logging()
 
     app = FastAPI(title="TILIK API", version=__version__, docs_url=None, redoc_url=None)
@@ -80,13 +97,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Status provider diisi setelah abstraksi provider ada (T-19).
         return {"status": "ok", "providers": {}, "version": __version__}
 
-    @app.post("/analyze/caption")
-    def analyze_caption(body: CaptionRequest, request: Request) -> dict:
-        del body  # stub: input divalidasi lalu dibuang, tidak disimpan atau dicatat
-        return {
-            "request_id": request.state.request_id,
-            "layers": [_skipped("L3", "rule"), _skipped("L4", "rule"), _skipped("L4", None)],
-        }
+    app.include_router(build_caption_router(rule_engine, text_provider))
 
     @app.post("/analyze/visual")
     def analyze_visual(request: Request) -> dict:

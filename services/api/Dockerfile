@@ -21,6 +21,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY --chown=user app ./app
 COPY --chown=user rules_engine ./rules_engine
 COPY --chown=user rules ./rules
+COPY --chown=user providers ./providers
 
 EXPOSE 7860
 # --no-access-log: log akses bawaan uvicorn diganti log tilik.access tanpa konten (NFR-PRIV-01).
