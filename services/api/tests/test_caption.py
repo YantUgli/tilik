@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from app.config import Settings
 from app.llm_schema import LLM_TEXT_OUTPUT_JSON_SCHEMA, LlmTextOutput
-from app.main import create_app
+from app.main import build_text_provider, create_app
 from app.prompts import build_caption_messages
 from app.routes.caption import LLM_LAYER_TIMEOUT_S
 from contract_validation import CONTRACTS, EXAMPLES, errors, load_json
@@ -429,6 +429,41 @@ def test_uses_chat_completions() -> None:
     assert [m["role"] for m in payload["messages"]] == ["system", "user"]
 
 
+def test_reasoning_effort_sent_only_when_set() -> None:
+    bodies: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        bodies.append(json.loads(request.content))
+        return chat_ok(llm_json([]))
+
+    settings = Settings(fireworks_api_key="kunci-uji", fireworks_text_model="model-uji",
+                        text_reasoning_effort="none")
+    provider = build_text_provider(settings)
+    provider._transport = httpx.MockTransport(handler)
+    asyncio.run(provider.classify(POLITIK_CAPTION, None))
+    assert bodies[-1]["reasoning_effort"] == "none"
+    assert bodies[-1]["max_tokens"] == 1000
+
+    asyncio.run(fireworks_with(handler).classify(POLITIK_CAPTION, None))
+    assert "reasoning_effort" not in bodies[-1]
+
+
+def test_settings_reasoning_effort_and_max_tokens(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert Settings().text_max_tokens == 1000
+    assert Settings().text_reasoning_effort is None
+
+    monkeypatch.delenv("TEXT_MAX_TOKENS", raising=False)
+    monkeypatch.setenv("TEXT_REASONING_EFFORT", "  none ")
+    env = Settings.from_env()
+    assert env.text_reasoning_effort == "none" and env.text_max_tokens == 1000
+
+    for blank in ("", "   "):
+        monkeypatch.setenv("TEXT_REASONING_EFFORT", blank)
+        assert Settings.from_env().text_reasoning_effort is None
+    monkeypatch.delenv("TEXT_REASONING_EFFORT")
+    assert Settings.from_env().text_reasoning_effort is None
+
+
 # --- Salinan Pydantic setara dengan kontrak -----------------------------------
 
 
@@ -479,6 +514,10 @@ def test_live_fireworks(caption: str) -> None:
     key, model = os.environ.get("FIREWORKS_EVAL_API_KEY"), os.environ.get("FIREWORKS_TEXT_MODEL")
     if not key or not model:
         pytest.skip("FIREWORKS_EVAL_API_KEY / FIREWORKS_TEXT_MODEL tidak diset (NFR-COST-04)")
-    output, usage = asyncio.run(FireworksText(api_key=key, model=model, max_tokens=400).classify(caption, None))
+    # Sama dengan deploy: max_tokens dan reasoning_effort dari env (Settings.from_env).
+    env = Settings.from_env()
+    provider = FireworksText(api_key=key, model=model, max_tokens=env.text_max_tokens,
+                             reasoning_effort=env.text_reasoning_effort)
+    output, usage = asyncio.run(provider.classify(caption, None))
     assert errors("llm-text-output", output.model_dump()) == []
     assert usage.tokens_in and usage.tokens_out is not None

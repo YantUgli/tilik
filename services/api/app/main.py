@@ -48,6 +48,7 @@ def build_text_provider(settings: Settings) -> TextProvider | None:
         api_key=settings.fireworks_api_key,
         model=settings.fireworks_text_model,
         max_tokens=settings.text_max_tokens,
+        reasoning_effort=settings.text_reasoning_effort,
     )
 
 

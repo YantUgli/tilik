@@ -19,7 +19,7 @@ def parse_allowed_origins(raw: str | None) -> list[str]:
     return origins
 
 
-DEFAULT_TEXT_MAX_TOKENS = 400  # NFR-COST-03
+DEFAULT_TEXT_MAX_TOKENS = 1000  # NFR-COST-03 (SPEC 0.8)
 
 
 def _blank_to_none(raw: str | None) -> str | None:
@@ -48,6 +48,9 @@ class Settings:
     fireworks_api_key: str | None = field(default=None, repr=False)
     fireworks_text_model: str | None = None
     text_max_tokens: int = DEFAULT_TEXT_MAX_TOKENS
+    # Dikirim sebagai `reasoning_effort` bila diisi; None → tidak dikirim (model non-reasoning).
+    # Tidak divalidasi di sini: nilai yang ditolak provider terlihat sebagai http_status=400 di log.
+    text_reasoning_effort: str | None = None
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -56,4 +59,5 @@ class Settings:
             fireworks_api_key=_blank_to_none(os.environ.get("FIREWORKS_API_KEY")),
             fireworks_text_model=_blank_to_none(os.environ.get("FIREWORKS_TEXT_MODEL")),
             text_max_tokens=parse_max_tokens(os.environ.get("TEXT_MAX_TOKENS")),
+            text_reasoning_effort=_blank_to_none(os.environ.get("TEXT_REASONING_EFFORT")),
         )

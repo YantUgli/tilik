@@ -31,11 +31,13 @@ class OpenAICompatText:
         api_key: str,
         model: str,
         max_tokens: int,
+        reasoning_effort: str | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self._api_key = api_key
         self._model = model
         self._max_tokens = max_tokens
+        self._reasoning_effort = reasoning_effort
         self._transport = transport
 
     def __repr__(self) -> str:  # tanpa key
@@ -62,7 +64,7 @@ class OpenAICompatText:
         raise AssertionError("tidak terjangkau")  # pragma: no cover
 
     def _payload(self, messages: list[dict]) -> dict:
-        return {
+        payload = {
             "model": self._model,
             "messages": messages,
             "temperature": 0,
@@ -72,6 +74,10 @@ class OpenAICompatText:
                 "json_schema": {"name": "LlmTextOutput", "schema": LLM_TEXT_OUTPUT_JSON_SCHEMA},
             },
         }
+        if self._reasoning_effort is not None:
+            # Model reasoning menghabiskan max_tokens untuk penalaran → JSON terpotong (SPEC 0.8).
+            payload["reasoning_effort"] = self._reasoning_effort
+        return payload
 
     async def _chat(self, client: httpx.AsyncClient, messages: list[dict]) -> tuple[str | None, Usage]:
         try:
