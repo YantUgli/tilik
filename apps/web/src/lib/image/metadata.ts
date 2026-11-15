@@ -122,6 +122,51 @@ function jpegMarkers(b: Uint8Array): number[] | null {
   return null;
 }
 
+/**
+ * Buang segmen APP1..APP15 dan COM dari JPEG (lossless; data gambar tidak disentuh). Dipakai pada keluaran
+ * canvas: encoder sebagian browser (mis. Safari) menambahkan EXIF teknis/ICC sendiri. Hasilnya TETAP
+ * diverifikasi ulang oleh `verifyClean`. Bukan JPEG atau struktur rusak → `null` (pemanggil tidak mengubah apa pun).
+ */
+export function stripJpegMetadata(b: Uint8Array): Uint8Array | null {
+  if (!(b.length >= 4 && b[0] === 0xff && b[1] === 0xd8)) return null;
+  const parts: Uint8Array[] = [b.subarray(0, 2)];
+  let i = 2;
+  while (i < b.length) {
+    if (b[i] !== 0xff) return null;
+    let j = i;
+    while (j < b.length && b[j] === 0xff) j++;
+    if (j >= b.length) return null;
+    const m = b[j];
+    if (m === 0xda || m === 0xd9) {
+      parts.push(b.subarray(i)); // data gambar sampai akhir file
+      return concatBytes(parts);
+    }
+    if (m === 0x01 || (m >= 0xd0 && m <= 0xd7)) {
+      parts.push(b.subarray(i, j + 1));
+      i = j + 1;
+      continue;
+    }
+    if (j + 3 > b.length) return null;
+    const len = (b[j + 1] << 8) | b[j + 2];
+    const end = j + 1 + len;
+    if (len < 2 || end > b.length) return null;
+    const isMeta = (m >= 0xe1 && m <= 0xef) || m === 0xfe;
+    if (!isMeta) parts.push(b.subarray(i, end));
+    i = end;
+  }
+  return null;
+}
+
+function concatBytes(parts: Uint8Array[]): Uint8Array {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let o = 0;
+  for (const p of parts) {
+    out.set(p, o);
+    o += p.length;
+  }
+  return out;
+}
+
 function pngChunkTypes(b: Uint8Array): string[] {
   const types: string[] = [];
   let i = 8;

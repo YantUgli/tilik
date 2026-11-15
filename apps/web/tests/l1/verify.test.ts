@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SAFE_FAILED_MESSAGE, SafeVersionError, makeSafeDownload } from "@/features/l1/safe-download";
-import { verifyClean } from "@/lib/image/metadata";
+import { stripJpegMetadata, verifyClean } from "@/lib/image/metadata";
 import {
   exifJpeg,
   jfifJpeg,
@@ -52,8 +52,26 @@ describe("verifyClean", () => {
 const blobOf = (b: Uint8Array) => new Blob([b as BlobPart], { type: "image/jpeg" });
 
 describe("makeSafeDownload (FR-L1-04)", () => {
-  it("encoder menghasilkan bytes kotor → melempar dengan pesan UI", async () => {
-    const p = makeSafeDownload(async () => blobOf(exifJpeg()));
+  it("JPEG dengan EXIF dari encoder (mis. Safari) → segmen dibuang, hasil bersih dan terverifikasi", async () => {
+    const blob = await makeSafeDownload(async () => blobOf(exifJpeg()));
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    expect(blob.type).toBe("image/jpeg");
+    expect(await verifyClean(bytes)).toEqual({ clean: true, found: [] });
+    expect(bytes.length).toBeLessThan(exifJpeg().length);
+  });
+
+  it("stripJpegMetadata: APP1 dibuang, JFIF APP0 tetap; bukan JPEG/rusak → null", () => {
+    const s = stripJpegMetadata(exifJpeg());
+    expect(s).not.toBeNull();
+    expect(s![0]).toBe(0xff);
+    expect(s![1]).toBe(0xd8);
+    expect(stripJpegMetadata(jfifJpeg())).toEqual(jfifJpeg());
+    expect(stripJpegMetadata(plainPng())).toBeNull();
+    expect(stripJpegMetadata(exifJpeg().subarray(0, 10))).toBeNull();
+  });
+
+  it("verifier tetap menolak sisa metadata → melempar dengan pesan UI", async () => {
+    const p = makeSafeDownload(async () => new Blob([pngWithText() as BlobPart], { type: "image/png" }));
     await expect(p).rejects.toBeInstanceOf(SafeVersionError);
     await expect(p).rejects.toThrow("Versi aman gagal dibuat, coba lagi");
     expect(SAFE_FAILED_MESSAGE).toBe("Versi aman gagal dibuat, coba lagi");

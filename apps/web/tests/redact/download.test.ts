@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { SAFE_FAILED_MESSAGE } from "@/features/l1/safe-download";
 import { SAFE_NAME_PLAIN, SAFE_NAME_REDACTED, makeRedactedDownload, safeFileName } from "@/features/redact/download";
-import { exifJpeg, jfifJpeg } from "../l1/fixtures";
+import { jfifJpeg, pngWithText } from "../l1/fixtures";
 
 const jpeg = (bytes: Uint8Array) => new Blob([bytes as BlobPart], { type: "image/jpeg" });
 const BOX = [0.1, 0.1, 0.2, 0.05];
 
 describe("makeRedactedDownload (encoder di-inject)", () => {
-  it("encoder menghasilkan bytes ber-metadata → tetap ditolak", async () => {
-    const encode = vi.fn(async () => jpeg(exifJpeg()));
+  it("encoder menghasilkan bytes ber-metadata yang tidak bisa dibuang → tetap ditolak", async () => {
+    const encode = vi.fn(async () => new Blob([pngWithText() as BlobPart], { type: "image/png" }));
     await expect(makeRedactedDownload(encode, [BOX])).rejects.toThrow(SAFE_FAILED_MESSAGE);
   });
 
