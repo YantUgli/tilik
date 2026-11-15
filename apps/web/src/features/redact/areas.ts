@@ -14,7 +14,12 @@ export type RedactArea = {
   findingId: string;
   label: string;
   bbox: Bbox;
+  /** "face" = area wajah dari deteksi di browser (T-15): blok mosaik lebih besar. Tanpa kind = teks. */
+  kind?: "face";
 };
+
+/** Area yang diberikan ke encoder bila ada wajah; bbox polos (`Bbox`) tetap berarti area teks. */
+export type MosaicTarget = { bbox: Bbox; face: boolean };
 
 /** Persegi dalam piksel bitmap kerja + ukuran blok mosaik. */
 export type PixelRect = { x: number; y: number; w: number; h: number; block: number };
@@ -50,12 +55,23 @@ export function activeBoxes(areas: readonly RedactArea[], disabled: ReadonlySet<
   return areas.filter((a) => !disabled.has(a.id)).map((a) => a.bbox);
 }
 
+/** Area server + area wajah dalam satu daftar (urutan: server dulu). Toggle tetap per id, jadi saling independen. */
+export function mergeAreas(server: readonly RedactArea[], faces: readonly RedactArea[]): RedactArea[] {
+  return faces.length === 0 ? [...server] : [...server, ...faces];
+}
+
+/** Seperti `activeBoxes`, tetapi membawa jenis area supaya encoder bisa memakai blok wajah. */
+export function activeTargets(areas: readonly RedactArea[], disabled: ReadonlySet<string>): MosaicTarget[] {
+  return areas.filter((a) => !disabled.has(a.id)).map((a) => ({ bbox: a.bbox, face: a.kind === "face" }));
+}
+
 /**
  * bbox relatif → piksel bitmap kerja. Padding 15% dari tinggi bbox di semua sisi, di-clamp ke tepi.
  * bbox tidak valid (bukan 4 angka, di luar 0..1, lebar/tinggi ≤ 0) atau gambar kosong → null.
- * Blok mosaik = max(8 px, ½ tinggi area) supaya teks tidak terbaca lagi.
+ * Blok mosaik = max(8 px, ½ tinggi area) supaya teks tidak terbaca lagi. Wajah (`face`): blok =
+ * max(8 px, ⌈sisi terpendek / 6⌉) — sekitar 6 blok melintang wajah, tidak bisa dikenali lagi.
  */
-export function toPixelRect(bbox: Bbox, width: number, height: number): PixelRect | null {
+export function toPixelRect(bbox: Bbox, width: number, height: number, face = false): PixelRect | null {
   if (!(width > 0 && height > 0) || bbox.length !== 4) return null;
   if (!bbox.every((v) => Number.isFinite(v) && v >= 0 && v <= 1)) return null;
   const [bx, by, bw, bh] = bbox;
@@ -70,5 +86,6 @@ export function toPixelRect(bbox: Bbox, width: number, height: number): PixelRec
   const w = x1 - x0;
   const h = y1 - y0;
   if (w < 1 || h < 1) return null;
-  return { x: x0, y: y0, w, h, block: Math.max(MIN_BLOCK, Math.ceil(h / 2)) };
+  const block = face ? Math.max(MIN_BLOCK, Math.ceil(Math.min(w, h) / 6)) : Math.max(MIN_BLOCK, Math.ceil(h / 2));
+  return { x: x0, y: y0, w, h, block };
 }

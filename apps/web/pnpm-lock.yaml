@@ -166,6 +166,9 @@ importers:
 
   .:
     dependencies:
+      '@mediapipe/tasks-vision':
+        specifier: 1.2.0
+        version: 1.2.0
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -380,6 +383,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@mediapipe/tasks-vision@1.2.0':
+    resolution: {integrity: sha512-7+dr9GbGyTtcuLh11wE5TOn4dNFRncIT9oAWs72620WX99KW5FfzF6rFJ/ChTgXG9vJ6dCiE9FrEEY4CnwPWKQ==}
 
   '@next/env@16.4.5':
     resolution: {integrity: sha512-JwSPwpdkZL5VMl2jA/q+JI8MZdweAL3xmw5/tb9y/TLtmS0YXZnmYDzSihwk8xTj1OL+WM53gTqaj96yuLp6Xw==}
@@ -1100,6 +1106,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  '@mediapipe/tasks-vision@1.2.0': {}
 
   '@next/env@16.4.5': {}
 

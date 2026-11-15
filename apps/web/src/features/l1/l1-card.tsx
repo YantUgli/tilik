@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { activeBoxes, type Bbox, type RedactArea } from "@/features/redact/areas";
+import { FaceSearch, type FaceSearchState } from "@/features/face/face-search";
+import { createFaceRunner, type FaceRunner } from "@/features/face/run";
+import { activeTargets, mergeAreas, type MosaicTarget, type RedactArea } from "@/features/redact/areas";
 import { SAFE_NAME_REDACTED, makeRedactedDownload } from "@/features/redact/download";
 import { encodeRedactedJpeg } from "@/features/redact/pixelate";
 import { RedactPanel } from "@/features/redact/redact-panel";
@@ -23,6 +25,10 @@ type Props = {
 type Safe = { phase: "preparing" } | { phase: "ready"; url: string; name: string } | { phase: "failed" };
 
 const NO_AREAS: readonly RedactArea[] = [];
+const NO_FACES: RedactArea[] = [];
+
+/** MediaPipe (±14 MB WASM dari CDN) baru di-import saat pengguna menekan "Cari wajah". */
+const loadFaceDetector = () => import("@/features/face/mediapipe").then((m) => m.createMediapipeFaceDetector());
 /** Jeda sebelum versi aman disiapkan ulang setelah area/toggle berubah. */
 const REPREPARE_DEBOUNCE_MS = 300;
 
@@ -47,10 +53,17 @@ export function L1Card({ file, images, areas = NO_AREAS, onResult }: Props) {
   const [safe, setSafe] = useState<Safe>({ phase: "preparing" });
   const [disabled, setDisabled] = useState<ReadonlySet<string>>(() => new Set());
   const [beforeUrl, setBeforeUrl] = useState<string | null>(null);
+  /** Area wajah (T-15): hanya bila pengguna menekan "Cari wajah"; dibuang bersama kartu saat foto diganti. */
+  const [faces, setFaces] = useState<RedactArea[]>(NO_FACES);
+  const [faceSearch, setFaceSearch] = useState<FaceSearchState>({ phase: "idle" });
+  const faceRunner = useRef<FaceRunner<ImageBitmap> | null>(null);
+  const alive = useRef(true);
   const report = useRef(onResult);
   report.current = onResult;
 
-  const boxes = useMemo(() => activeBoxes(areas, disabled), [areas, disabled]);
+  /** Area server + wajah; toggle per id, jadi area server yang datang belakangan tidak mengubah toggle wajah. */
+  const allAreas = useMemo(() => mergeAreas(areas, faces), [areas, faces]);
+  const boxes = useMemo(() => activeTargets(allAreas, disabled), [allAreas, disabled]);
   const boxesRef = useRef(boxes);
   boxesRef.current = boxes;
   /** Kunci isi (bukan identitas array) supaya versi aman hanya disiapkan ulang bila area aktif berubah. */
@@ -58,15 +71,18 @@ export function L1Card({ file, images, areas = NO_AREAS, onResult }: Props) {
 
   /** Generasi persiapan terbaru; hasil generasi lama atau setelah unmount dibuang. */
   const gen = useRef(0);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
       gen.current = -1;
-    },
-    [],
-  );
+      faceRunner.current?.close();
+      faceRunner.current = null;
+    };
+  }, []);
 
   const prepareSafe = useCallback(
-    (active: Bbox[]) => {
+    (active: MosaicTarget[]) => {
       const g = ++gen.current;
       setSafe({ phase: "preparing" });
       makeRedactedDownload((b) => encodeRedactedJpeg(images.work, b), active).then(
@@ -119,7 +135,7 @@ export function L1Card({ file, images, areas = NO_AREAS, onResult }: Props) {
     [safe],
   );
 
-  const hasAreas = areas.length > 0;
+  const hasAreas = allAreas.length > 0;
   useEffect(() => {
     if (!hasAreas) return;
     const url = URL.createObjectURL(images.send.blob);
@@ -139,17 +155,34 @@ export function L1Card({ file, images, areas = NO_AREAS, onResult }: Props) {
     });
   }, []);
 
+  const onSearchFaces = useCallback(() => {
+    faceRunner.current ??= createFaceRunner<ImageBitmap>(loadFaceDetector);
+    const runner = faceRunner.current;
+    const { work } = images;
+    setFaceSearch({ phase: "running" });
+    void runner.run(work, work.width, work.height).then((out) => {
+      if (!alive.current) return; // sudah unmount: hasil dibuang
+      if (out.status === "ok") {
+        setFaces(out.areas);
+        setFaceSearch({ phase: "done", count: out.areas.length });
+      } else {
+        setFaceSearch({ phase: "failed" });
+      }
+    });
+  }, [images]);
+
   const redacted = boxes.length > 0;
 
   return (
     <LayerCard title={L1_TITLE} layer={result}>
       <RedactPanel
-        areas={areas}
+        areas={allAreas}
         disabled={disabled}
         onToggle={onToggle}
         afterUrl={safe.phase === "ready" ? safe.url : null}
         beforeUrl={beforeUrl}
       />
+      <FaceSearch state={faceSearch} ready={images.work.width > 0} onSearch={onSearchFaces} />
       <div className="actions">
         {safe.phase === "preparing" && (
           <button type="button" disabled>
@@ -159,7 +192,7 @@ export function L1Card({ file, images, areas = NO_AREAS, onResult }: Props) {
         {safe.phase === "ready" && (
           <a className="button" href={safe.url} download={safe.name}>
             {safe.name === SAFE_NAME_REDACTED
-              ? "Unduh versi aman (tanpa metadata, teks disamarkan)"
+              ? "Unduh versi aman (tanpa metadata, bagian sensitif disamarkan)"
               : "Unduh versi tanpa metadata"}
           </a>
         )}

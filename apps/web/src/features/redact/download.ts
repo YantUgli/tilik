@@ -5,7 +5,6 @@
 
 import { makeSafeDownload } from "@/features/l1/safe-download";
 import type { CleanCheck } from "@/lib/image/metadata";
-import type { Bbox } from "./areas";
 
 export const SAFE_NAME_REDACTED = "foto-aman.jpg";
 export const SAFE_NAME_PLAIN = "foto-tanpa-metadata.jpg";
@@ -17,9 +16,9 @@ export function safeFileName(activeCount: number): string {
 export type SafeDownload = { blob: Blob; name: string };
 
 /** `encode` menerima bbox aktif; di browser = `encodeRedactedJpeg(work, boxes)`. */
-export async function makeRedactedDownload(
-  encode: (boxes: Bbox[]) => Promise<Blob>,
-  boxes: Bbox[],
+export async function makeRedactedDownload<B>(
+  encode: (boxes: B[]) => Promise<Blob>,
+  boxes: B[],
   verify?: (bytes: Uint8Array) => Promise<CleanCheck>,
 ): Promise<SafeDownload> {
   const blob = await makeSafeDownload(() => encode(boxes), verify);

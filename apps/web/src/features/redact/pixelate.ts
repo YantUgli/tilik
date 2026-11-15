@@ -5,9 +5,10 @@
  */
 
 import { SAFE_JPEG_QUALITY, canvasToJpeg, context2d, makeCanvas } from "@/lib/image/downscale";
-import { toPixelRect, type Bbox } from "./areas";
+import { toPixelRect, type Bbox, type MosaicTarget } from "./areas";
 
-export async function encodeRedactedJpeg(work: ImageBitmap, boxes: readonly Bbox[]): Promise<Blob> {
+/** `boxes`: bbox polos (area teks) atau `MosaicTarget` (bisa wajah, T-15). */
+export async function encodeRedactedJpeg(work: ImageBitmap, boxes: readonly (Bbox | MosaicTarget)[]): Promise<Blob> {
   const { width, height } = work;
   const canvas = makeCanvas(width, height);
   const ctx = context2d(canvas);
@@ -15,8 +16,8 @@ export async function encodeRedactedJpeg(work: ImageBitmap, boxes: readonly Bbox
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(work, 0, 0, width, height);
 
-  for (const bbox of boxes) {
-    const r = toPixelRect(bbox, width, height);
+  for (const box of boxes) {
+    const r = Array.isArray(box) ? toPixelRect(box, width, height) : toPixelRect(box.bbox, width, height, box.face);
     if (!r) continue;
     const sw = Math.max(1, Math.ceil(r.w / r.block));
     const sh = Math.max(1, Math.ceil(r.h / r.block));

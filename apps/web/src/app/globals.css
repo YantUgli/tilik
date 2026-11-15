@@ -309,6 +309,25 @@ textarea[aria-invalid="true"] {
   overflow-wrap: anywhere;
 }
 
+/* T-15: cari wajah (opsional, dipicu pengguna) */
+.face-search {
+  margin-top: 0.75rem;
+}
+
+.face-search button {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.face-search p {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.face-search .status:empty {
+  display: none;
+}
+
 /* Galeri contoh (T-26, FR-UI-02). Di 360 px kartu bertumpuk; tanpa scroll horizontal halaman. */
 .gallery-list {
   list-style: none;

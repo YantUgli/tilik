@@ -25,7 +25,7 @@ export function RedactPanel({ areas, disabled, onToggle, afterUrl, beforeUrl }: 
 
   return (
     <div className="redact">
-      <h3>Sembunyikan teks sensitif</h3>
+      <h3>{areas.some((a) => a.kind !== "face") ? "Sembunyikan bagian sensitif" : "Samarkan wajah"}</h3>
       <figure className="redact-preview">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element -- object URL lokal
