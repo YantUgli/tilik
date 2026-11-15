@@ -14,11 +14,11 @@ flowchart LR
     OCR["OCR Tesseract.js ind<br/>Web Worker"]
     RISK["Risiko akhir<br/>= tingkat tertinggi"]
     UI["Kartu hasil per pemeriksaan"]
-    BLUR["Blur area sensitif"]:::plan
-    FACE["Deteksi wajah"]:::plan
+    BLUR["Penyamaran (mosaik)<br/>area kata yang ditandai server"]
+    FACE["Deteksi wajah MediaPipe<br/>atas permintaan"]
   end
 
-  subgraph Server["Server (FastAPI Cloud, stateless)"]
+  subgraph Server["Server (FastAPI Cloud, tanpa penyimpanan permanen)"]
     CAP["POST /analyze/caption"]
     RULE["Rule engine YAML<br/>L3 dokumen dinas, L4 caption"]
     LLM["Provider LLM<br/>chat completions"]
@@ -35,6 +35,9 @@ flowchart LR
   CDN -. "unduhan sekali" .-> OCR
   OCR -- "caption + ocr_text + ocr_words" --> CAP
   CAP --> RULE --> LLM --> FW
+  CAP -- "posisi kata yang ditandai" --> BLUR --> SAFE
+  DS --> FACE -- "posisi wajah" --> BLUR
+  CDN -. "unduhan sekali" .-> FACE
   CAP -- "3 LayerResult" --> RISK
   L1 --> RISK --> UI
   DS -. "gambar ≤ 1024 px (rencana)" .-> VIS
@@ -43,7 +46,7 @@ flowchart LR
 ```
 
 1. Foto divalidasi dari magic bytes, ukuran ≤ 10 MB, dan jumlah piksel, lalu di-decode dengan orientasi EXIF diterapkan dan diperkecil menjadi versi kerja ≤ 2048 px.
-2. **Metadata** dibaca dari bytes file asli. Versi tanpa metadata dibuat ulang dari versi kerja lewat canvas (JPEG), lalu diperiksa ulang; unduhan ditahan bila masih ada segmen/chunk metadata.
+2. **Metadata** dibaca dari bytes file asli. Versi tanpa metadata dibuat ulang dari versi kerja lewat canvas (JPEG), lalu diperiksa ulang; unduhan ditahan bila masih ada segmen/chunk metadata. Setelah server menjawab, kata yang ditandai aturan (dengan posisinya) dimosaik di versi yang sama; pengguna bisa mematikan area tertentu. Bila pengguna menekan "Cari wajah", MediaPipe (WASM dari CDN, model dari situs sendiri) mencari wajah di versi kerja; wajah yang ditemukan menjadi area mosaik tambahan. Wajah tidak masuk risiko akhir.
 3. **OCR** membaca versi kerja. Setiap kata diberi posisi (relatif 0..1) dan tingkat keyakinan. Timeout 20 detik; bila gagal, pemeriksaan lain tetap jalan.
 4. Setelah OCR selesai atau gagal, browser mengirim caption dan teks OCR ke `/analyze/caption`. **Gambar tidak dikirim.**
 5. Server menjalankan aturan lebih dulu, lalu LLM, dan selalu mengembalikan tiga hasil lapis.
@@ -51,7 +54,7 @@ flowchart LR
 
 ## Kontrak data
 
-Semua kontrak berupa JSON Schema draft 2020-12 di [`contracts/`](../contracts), dengan [`openapi.yaml`](../contracts/openapi.yaml) dan contoh valid/tidak valid di [`contracts/examples/`](../contracts/examples). Tipe di frontend dan model Pydantic di backend diturunkan dari kontrak ini.
+Semua kontrak berupa JSON Schema draft 2020-12 di [`contracts/`](../contracts), dengan [`openapi.yaml`](../contracts/openapi.yaml) dan contoh valid/tidak valid di [`contracts/examples/`](../contracts/examples). Frontend memvalidasi request dan respons dengan salinan skema ini, dan backend diuji terhadap contoh di `contracts/examples/`.
 
 | Kontrak | Isi ringkas |
 |---|---|
@@ -74,10 +77,10 @@ Respons yang tidak sesuai kontrak ditandai `error` di browser, bukan ditampilkan
 
 | Keputusan | Alasan |
 |---|---|
-| Aplikasi web (Next.js) tanpa instalasi; PWA direncanakan | Pengguna cukup membuka tautan dari HP; pemrosesan berat bisa di browser |
+| Aplikasi web (Next.js) tanpa instalasi dari toko aplikasi; bisa dipasang ke layar utama lewat web app manifest (belum offline) | Pengguna cukup membuka tautan dari HP; pemrosesan berat bisa di browser |
 | LLM lewat endpoint chat completions bergaya OpenAI (Fireworks); provider cadangan direncanakan | Satu antarmuka untuk beberapa provider; output JSON tervalidasi |
-| OCR di browser (Tesseract.js), bukan di server atau layanan cloud | Dokumen dinas adalah konten paling sensitif; yang keluar hanya teks dan posisi kata. Posisi kata dibutuhkan untuk blur (rencana). |
+| OCR di browser (Tesseract.js), bukan di server atau layanan cloud | Dokumen dinas adalah konten paling sensitif; yang keluar hanya teks dan posisi kata. Posisi kata dipakai untuk menyamarkan kata yang ditandai aturan. |
 | Rule engine YAML terpisah dari LLM, risiko akhir = tingkat tertinggi | Tahan terhadap injeksi prompt; aturan bisa diaudit dan diuji dengan contoh positif/negatif |
 | Kategori Siber Sosial: pencegahan sebelum unggah | Bukan memantau ruang siber sosial setelah kejadian, tetapi mencegah konten berisiko masuk ke sana |
-| Backend stateless | Gambar dan teks pengguna tidak disimpan dan tidak di-log; access log bawaan server (memuat IP dan query string) dimatikan |
-| Hosting Vercel (web) + FastAPI Cloud (API) | Paket gratis tanpa kartu kredit, deploy dengan satu perintah; konsekuensinya server tidur saat idle (cold start ±6 detik) |
+| Backend tanpa penyimpanan permanen | Gambar dan teks pengguna tidak disimpan ke disk/database dan tidak di-log; access log bawaan server (memuat IP dan query string) dimatikan. Satu-satunya state: rate limit per IP, kuota token harian, dan cache hasil LLM, semuanya di memori dan hilang saat restart |
+| Hosting Vercel (web) + FastAPI Cloud (API) | Paket gratis, deploy dengan satu perintah; konsekuensinya server tidur saat idle (cold start ±6 detik) |
