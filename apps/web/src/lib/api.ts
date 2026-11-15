@@ -1,5 +1,11 @@
-// Klien API TILIK untuk halaman uji koneksi (T-08). Hanya /health dan /analyze/caption.
-import { validateCaptionResponse, validateError, validateHealth, type ValidationResult } from "@/lib/validate";
+// Klien API TILIK: /health dan /analyze/caption (uji koneksi T-08, analisis caption T-23).
+import {
+  validateCaptionResponse,
+  validateError,
+  validateHealth,
+  type LayerResult,
+  type ValidationResult,
+} from "@/lib/validate";
 
 export type CaptionRequest = {
   caption: string | null;
@@ -26,7 +32,7 @@ export type FetchOptions = {
   timeoutMs?: number;
 };
 
-// HF Spaces gratis bisa tidur; request pertama setelah bangun bisa lama.
+// FastAPI Cloud scale-to-zero: request pertama setelah server tidur bisa lama (cold start ±6 dtk).
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 /** Normalisasi NEXT_PUBLIC_API_URL. Kosong atau bukan http(s) -> null. */
@@ -138,4 +144,44 @@ export function postCaption(
     validateCaptionResponse,
     opts,
   );
+}
+
+/** Hasil /analyze/caption untuk UI: selalu tiga lapis [L3 aturan, L4 aturan, L4 LLM]. */
+export type CaptionResult = {
+  layers: LayerResult[];
+  /** null = server menjawab sesuai kontrak; selain itu lapis berisi placeholder. */
+  problem: null | "busy" | "unavailable" | "invalid";
+  /** Pesan untuk pengguna (tidak memuat caption). */
+  message: string | null;
+};
+
+export const BUSY_MESSAGE = "Sedang ramai, coba lagi sebentar.";
+const UNAVAILABLE_MESSAGE = "Server pemeriksa caption sedang tidak bisa dihubungi.";
+const INVALID_MESSAGE = "Jawaban server tidak sesuai format, jadi tidak ditampilkan.";
+
+const placeholders = (status: "unavailable" | "error", note: string): LayerResult[] =>
+  (["L3", "L4", "L4"] as const).map((layer) => ({ layer, status, provider: null, latency_ms: 0, findings: [], note }));
+
+/**
+ * Analisis caption. Tidak pernah melempar: 429 → sibuk, gagal jaringan/HTTP → tidak tersedia,
+ * respons tidak sesuai kontrak → lapis server ditandai `error`. OCR baru ada di T-13, jadi `ocrText` biasanya null.
+ */
+export async function analyzeCaption(
+  baseUrl: string | null,
+  caption: string,
+  ocrText: string | null,
+  opts?: FetchOptions,
+): Promise<CaptionResult> {
+  const out = await postCaption(baseUrl, { caption, ocr_text: ocrText, lang: "id" }, opts);
+  switch (out.kind) {
+    case "ok":
+      return { layers: (out.body as { layers: LayerResult[] }).layers, problem: null, message: null };
+    case "invalid":
+      return { layers: placeholders("error", INVALID_MESSAGE), problem: "invalid", message: INVALID_MESSAGE };
+    case "http_error":
+      if (out.status === 429) return { layers: placeholders("unavailable", BUSY_MESSAGE), problem: "busy", message: BUSY_MESSAGE };
+      return { layers: placeholders("unavailable", UNAVAILABLE_MESSAGE), problem: "unavailable", message: UNAVAILABLE_MESSAGE };
+    default:
+      return { layers: placeholders("unavailable", UNAVAILABLE_MESSAGE), problem: "unavailable", message: UNAVAILABLE_MESSAGE };
+  }
 }

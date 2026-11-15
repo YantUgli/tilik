@@ -19,9 +19,13 @@ type Photo =
   | { phase: "error"; message: string }
   | { phase: "ready"; file: File; images: PreparedImages; previewUrl: string; ms: number };
 
-type Props = { onSubmit?: (input: PreparedInput) => void };
+type Props = {
+  onSubmit?: (input: PreparedInput) => void;
+  /** Dipanggil saat foto diganti atau dihapus, sebelum bitmap lama ditutup: hasil lama harus dibuang. */
+  onChange?: () => void;
+};
 
-export function PhotoInput({ onSubmit }: Props) {
+export function PhotoInput({ onSubmit, onChange }: Props) {
   const ids = { file: useId(), caption: useId(), counter: useId() };
   const [photo, setPhoto] = useState<Photo>({ phase: "empty" });
   const [caption, setCaption] = useState("");
@@ -35,6 +39,7 @@ export function PhotoInput({ onSubmit }: Props) {
   const onFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     const my = ++token.current;
+    onChange?.();
     release(current.current);
     setNotice(null);
     if (!file) return setPhoto({ phase: "empty" });

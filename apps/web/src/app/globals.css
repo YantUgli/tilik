@@ -182,3 +182,91 @@ textarea[aria-invalid="true"] {
 .diagnostics > h2 {
   font-size: 1rem;
 }
+
+/* T-23: hasil M1 (gaya sementara; tampilan final di T-25) */
+.button {
+  display: inline-block;
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--fg);
+  color: var(--bg);
+  text-decoration: none;
+}
+
+.layer-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.layer-head h2 {
+  margin: 0;
+}
+
+.findings {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+
+.finding {
+  padding: 0.5rem 0 0.5rem 0.75rem;
+  border-left: 3px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+
+.finding.sev-tinggi {
+  border-left-color: var(--error);
+}
+
+.finding.sev-perhatian {
+  border-left-color: var(--warn);
+}
+
+.finding details {
+  margin-top: 0.35rem;
+}
+
+.finding details p {
+  margin: 0.35rem 0;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0 0.4rem;
+  margin-right: 0.4rem;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  color: var(--muted);
+}
+
+.badge.sev-tinggi {
+  color: var(--error);
+}
+
+.badge.sev-perhatian {
+  color: var(--warn);
+}
+
+.actions {
+  margin-top: 0.75rem;
+}
+
+.risk-card.risk-tinggi {
+  border-color: var(--error);
+}
+
+.risk-card.risk-perhatian {
+  border-color: var(--warn);
+}
+
+.risk-level {
+  font-size: 1.25rem;
+  margin: 0.25rem 0 0;
+}
