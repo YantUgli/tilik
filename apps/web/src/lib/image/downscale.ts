@@ -54,21 +54,35 @@ async function resizeBitmap(src: ImageBitmap, max: number): Promise<ImageBitmap>
 async function encodeJpeg(src: ImageBitmap, max: number, quality: number): Promise<PreparedImages["send"]> {
   const { width, height } = targetSize(src.width, src.height, max);
   const canvas = makeCanvas(width, height);
-  const ctx = canvas.getContext("2d") as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
-  if (!ctx) throw new Error("Canvas 2D tidak tersedia");
+  const ctx = context2d(canvas);
   ctx.fillStyle = "#fff"; // PNG/WebP transparan → latar putih, bukan hitam
   ctx.fillRect(0, 0, width, height);
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(src, 0, 0, width, height);
+  return { blob: await canvasToJpeg(canvas, quality), width, height };
+}
+
+export type AnyCanvas = OffscreenCanvas | HTMLCanvasElement;
+export type AnyContext2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
+/** Konteks 2D dari canvas mana pun; tidak tersedia → melempar. */
+export function context2d(canvas: AnyCanvas): AnyContext2D {
+  const ctx = canvas.getContext("2d") as AnyContext2D | null;
+  if (!ctx) throw new Error("Canvas 2D tidak tersedia");
+  return ctx;
+}
+
+/** Encode isi canvas ke JPEG (tanpa metadata apa pun dari sumber). */
+export async function canvasToJpeg(canvas: AnyCanvas, quality: number): Promise<Blob> {
   const blob =
     canvas instanceof HTMLCanvasElement
       ? await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", quality))
       : await canvas.convertToBlob({ type: "image/jpeg", quality });
   if (!blob) throw new Error("Gagal meng-encode JPEG");
-  return { blob, width, height };
+  return blob;
 }
 
-function makeCanvas(width: number, height: number): OffscreenCanvas | HTMLCanvasElement {
+export function makeCanvas(width: number, height: number): AnyCanvas {
   if (typeof OffscreenCanvas !== "undefined") return new OffscreenCanvas(width, height);
   const c = document.createElement("canvas");
   c.width = width;

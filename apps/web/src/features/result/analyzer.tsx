@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { L1Card } from "@/features/l1/l1-card";
 import { PhotoInput, type PreparedInput } from "@/features/input/photo-input";
 import { createOcrRunner, type OcrOutcome, type OcrRunner } from "@/features/ocr/run";
 import { createTesseractWorker } from "@/features/ocr/tesseract";
+import { collectAreas } from "@/features/redact/areas";
 import { analyzeCaption, resolveApiUrl } from "@/lib/api";
 import { encodeSafeJpeg, type PreparedImages } from "@/lib/image/downscale";
 import { INCOMPLETE_NOTE, RISK_LABEL, computeRisk } from "@/lib/risk";
@@ -74,6 +75,8 @@ export function Analyzer() {
 
   const server = session.server;
   const serverLayers: (LayerResult | null)[] = server ? server.layers : [null, null, null];
+  // Area redaksi hanya dari temuan server (redactable + evidence.bboxes); kosong sebelum server menjawab.
+  const areas = useMemo(() => collectAreas(server ? server.layers : []), [server]);
   const all = session.l1 && server ? [session.l1, ...server.layers] : null;
   const risk = all ? computeRisk(all, { extraIncomplete: session.ocr === "error" }) : null;
 
@@ -96,7 +99,7 @@ export function Analyzer() {
             {server?.problem === "busy" && <p className="status warn">{server.message}</p>}
           </section>
 
-          <L1Card key={id} file={input.file} images={input.images} onResult={onL1} />
+          <L1Card key={id} file={input.file} images={input.images} areas={areas} onResult={onL1} />
 
           {serverLayers.map((layer, i) => (
             <LayerCard key={`${id}-${i}`} title={SERVER_TITLES[i]} layer={layer} busy={server?.problem === "busy"}>

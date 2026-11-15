@@ -275,3 +275,36 @@ textarea[aria-invalid="true"] {
 .small {
   font-size: 0.875rem;
 }
+
+/* T-14: redaksi (pratinjau sebelum/sesudah + toggle per area) */
+.redact {
+  margin-top: 0.75rem;
+}
+
+.redact h3 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.redact-preview {
+  margin: 0 0 0.5rem;
+}
+
+.redact-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  height: auto;
+  border-radius: 6px;
+}
+
+.redact-areas {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+
+.redact-areas li {
+  margin-bottom: 0.35rem;
+  overflow-wrap: anywhere;
+}
