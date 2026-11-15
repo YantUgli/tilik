@@ -26,6 +26,8 @@ def configure_logging() -> None:
     # menyalakannya tanpa bisa diberi flag. Uvicorn mengonfigurasi logging sebelum app
     # diimpor, jadi mematikannya di sini bertahan. Penggantinya: tilik.access.
     logging.getLogger("uvicorn.access").disabled = True
+    # slowapi mencatat kunci limiter (= IP klien) saat batas terlewati. Matikan (NFR-PRIV-01, T-20).
+    logging.getLogger("slowapi").disabled = True
 
 
 def log_access(request_id: str, method: str, path: str, status: int, latency_ms: int) -> None:
@@ -52,10 +54,17 @@ def log_llm(
     tokens_in: int | None,
     tokens_out: int | None,
     http_status: int | None,
+    *,
+    cache: str | None = None,
+    budget: str | None = None,
 ) -> None:
-    """Satu baris per panggilan lapis L4 LLM. Tanpa teks, body respons, atau pesan error."""
+    """Satu baris per panggilan lapis L4 LLM. Tanpa teks, body respons, atau pesan error.
+
+    `cache` = hit|miss, `budget` = skipped (T-20). Kunci cache dan IP tidak pernah dicatat.
+    """
+    extra = "".join(f" {k}={v}" for k, v in (("cache", cache), ("budget", budget)) if v)
     llm_log.info(
-        "request_id=%s provider=%s status=%s latency_ms=%d tokens_in=%s tokens_out=%s http_status=%s",
+        "request_id=%s provider=%s status=%s latency_ms=%d tokens_in=%s tokens_out=%s http_status=%s%s",
         request_id,
         provider or "-",
         status,
@@ -63,4 +72,5 @@ def log_llm(
         "-" if tokens_in is None else tokens_in,
         "-" if tokens_out is None else tokens_out,
         "-" if http_status is None else http_status,
+        extra,
     )

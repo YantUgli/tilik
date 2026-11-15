@@ -11,7 +11,9 @@ import asyncio
 import time
 
 from fastapi import APIRouter, Request
+from slowapi import Limiter
 
+from app.guards import LlmGuard, cache_key
 from app.logs import log_llm
 from app.mapping import map_llm_findings
 from app.schemas import CaptionRequest
@@ -29,6 +31,7 @@ NOTE_TIMEOUT = "Waktu tunggu LLM habis"
 NOTE_INVALID = "Output LLM tidak valid setelah coba ulang"
 NOTE_INTERNAL = "Kesalahan internal saat memanggil LLM"
 NOTE_RULE_ERROR = "Kesalahan internal pada rule engine"
+NOTE_BUDGET = "Pemeriksaan AI dijeda sementara karena batas harian; aturan tetap berjalan."
 
 
 def _layer(layer: str, status: str, provider: str | None, latency_ms: int, findings: list, *notes: str | None) -> dict:
@@ -51,10 +54,17 @@ def _is_blank(text: str | None) -> bool:
     return not (text or "").strip()
 
 
-def build_caption_router(engine: RuleEngine, provider: TextProvider | None) -> APIRouter:
+def build_caption_router(
+    engine: RuleEngine,
+    provider: TextProvider | None,
+    guard: LlmGuard,
+    limiter: Limiter,
+    rate_limit: str,
+) -> APIRouter:
     router = APIRouter()
 
     @router.post("/analyze/caption")
+    @limiter.limit(rate_limit)  # NFR-SEC-06; kunci = IP klien (app/guards.py)
     async def analyze_caption(body: CaptionRequest, request: Request) -> dict:
         request_id = request.state.request_id
         caption = body.caption
@@ -91,7 +101,7 @@ def build_caption_router(engine: RuleEngine, provider: TextProvider | None) -> A
         l4 = [f for f in rule_findings if f["layer"] == "L4"]
 
         # 2. LLM: lapis terpisah; kegagalannya tidak menyentuh hasil aturan.
-        llm = await _llm_layer(provider, caption, ocr_text, request_id, len(rule_findings) + 1, trunc_note)
+        llm = await _llm_layer(provider, guard, caption, ocr_text, request_id, len(rule_findings) + 1, trunc_note)
 
         return {
             "request_id": request_id,
@@ -107,6 +117,7 @@ def build_caption_router(engine: RuleEngine, provider: TextProvider | None) -> A
 
 async def _llm_layer(
     provider: TextProvider | None,
+    guard: LlmGuard,
     caption: str | None,
     ocr_text: str | None,
     request_id: str,
@@ -118,31 +129,61 @@ async def _llm_layer(
         return _layer("L4", "unavailable", None, 0, [], trunc_note, NOTE_NOT_CONFIGURED)
 
     start = time.perf_counter()
+
+    # Cache (NFR-COST-02): hit → tanpa provider dan tanpa token. Pemetaan diulang karena
+    # id temuan dan sumber kutipan bergantung pada request ini.
+    key = cache_key(guard.model, caption, ocr_text)
+    cached = guard.cache.get(key)
+    if cached is not None:
+        cached_provider, cached_output = cached
+        try:
+            findings = map_llm_findings(cached_output, caption, ocr_text, first_index)
+        except Exception:  # noqa: BLE001
+            log_llm(request_id, None, "error", _ms(start), None, None, None, cache="hit")
+            return _layer("L4", "error", None, _ms(start), [], trunc_note, NOTE_INTERNAL)
+        latency = _ms(start)
+        log_llm(request_id, cached_provider, "ok", latency, None, None, None, cache="hit")
+        return _layer("L4", "ok", cached_provider, latency, findings, trunc_note)
+
+    # Batas token harian (NFR-COST-01, deviasi T-20): LLM dilewati, aturan sudah berjalan.
+    if guard.budget.exhausted():
+        log_llm(request_id, None, "unavailable", 0, None, None, None, cache="miss", budget="skipped")
+        return _layer("L4", "unavailable", None, 0, [], trunc_note, NOTE_BUDGET)
+
     try:
         output, usage = await asyncio.wait_for(provider.classify(caption, ocr_text), LLM_LAYER_TIMEOUT_S)
     except InvalidOutput as exc:  # sebelum ProviderError: tidak memicu provider berikutnya (SPEC §5.6)
         usage = exc.usage
+        if usage:
+            guard.budget.add(usage.tokens_in, usage.tokens_out)
         log_llm(request_id, provider.name, "error", _ms(start),
-                usage and usage.tokens_in, usage and usage.tokens_out, exc.http_status)
+                usage and usage.tokens_in, usage and usage.tokens_out, exc.http_status, cache="miss")
         return _layer("L4", "error", provider.name, _ms(start), [], trunc_note, NOTE_INVALID)
     except ProviderError as exc:
         usage = exc.usage
+        if usage:
+            guard.budget.add(usage.tokens_in, usage.tokens_out)
         log_llm(request_id, provider.name, "unavailable", _ms(start),
-                usage and usage.tokens_in, usage and usage.tokens_out, exc.http_status)
+                usage and usage.tokens_in, usage and usage.tokens_out, exc.http_status, cache="miss")
         return _layer("L4", "unavailable", None, _ms(start), [], trunc_note, NOTE_UNAVAILABLE)
     except TimeoutError:
-        log_llm(request_id, provider.name, "unavailable", _ms(start), None, None, None)
+        # Token panggilan yang terputus tidak diketahui, jadi tidak terhitung.
+        log_llm(request_id, provider.name, "unavailable", _ms(start), None, None, None, cache="miss")
         return _layer("L4", "unavailable", None, _ms(start), [], trunc_note, NOTE_TIMEOUT)
     except Exception:  # noqa: BLE001 — bug di kode TILIK sebelum provider menjawab
-        log_llm(request_id, None, "error", _ms(start), None, None, None)
+        log_llm(request_id, None, "error", _ms(start), None, None, None, cache="miss")
         return _layer("L4", "error", None, _ms(start), [], trunc_note, NOTE_INTERNAL)
 
+    guard.budget.add(usage.tokens_in, usage.tokens_out)
     try:
         findings = map_llm_findings(output, caption, ocr_text, first_index)
     except Exception:  # noqa: BLE001 — provider sudah menjawab; error tercatat atas namanya
-        log_llm(request_id, provider.name, "error", _ms(start), usage.tokens_in, usage.tokens_out, usage.http_status)
+        log_llm(request_id, provider.name, "error", _ms(start), usage.tokens_in, usage.tokens_out,
+                usage.http_status, cache="miss")
         return _layer("L4", "error", provider.name, _ms(start), [], trunc_note, NOTE_INTERNAL)
 
+    guard.cache.put(key, provider.name, output)  # hanya hasil `ok`
     latency = _ms(start)
-    log_llm(request_id, provider.name, "ok", latency, usage.tokens_in, usage.tokens_out, usage.http_status)
+    log_llm(request_id, provider.name, "ok", latency, usage.tokens_in, usage.tokens_out, usage.http_status,
+            cache="miss")
     return _layer("L4", "ok", provider.name, latency, findings, trunc_note)

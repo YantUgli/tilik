@@ -31,7 +31,8 @@ uv run fastapi cloud env set FIREWORKS_API_KEY "<key-demo-fireworks>" --secret
 uv run fastapi cloud env set FIREWORKS_TEXT_MODEL "accounts/fireworks/models/deepseek-v4p1-flash"
 uv run fastapi cloud env set TEXT_REASONING_EFFORT "none"
 uv run fastapi cloud env set TEXT_MAX_TOKENS "1000"
-uv run fastapi cloud env set GROQ_API_KEY "<key-demo-groq>" --secret
+uv run fastapi cloud env set RATE_LIMIT "20/minute;300/day"
+uv run fastapi cloud env set DAILY_TOKEN_BUDGET "2000000"
 uv run fastapi deploy     # redeploy supaya env terbaca
 ```
 
@@ -46,6 +47,20 @@ uv run fastapi deploy     # redeploy supaya env terbaca
   Untuk model non-reasoning, kosongkan variabel ini (kunci tidak dikirim). Nilai yang ditolak
   provider terlihat di log sebagai `http_status=400`.
 - `TEXT_MAX_TOKENS`: default 1000 bila kosong (NFR-COST-03).
+- `RATE_LIMIT` (NFR-SEC-06): batas per IP klien untuk `POST /analyze/caption` dan
+  `/analyze/visual` (kuota terpisah per endpoint); `/health` tidak dibatasi. Default
+  `10/minute;60/day`. Lewat batas → 429 `RATE_LIMITED` + `Retry-After`. IP diambil dari entri
+  **paling kanan** `X-Forwarded-For` (diasumsikan ditambahkan proxy FastAPI Cloud; belum
+  terverifikasi, uji dengan langkah di §3). Juri di satu jaringan kantor berbagi satu IP, jadi
+  untuk demo pakai angka lebih longgar, mis. `20/minute;300/day`. IP tidak pernah ditulis ke log.
+- `DAILY_TOKEN_BUDGET` (NFR-COST-01, dihitung dalam token, bukan USD): jumlah `tokens_in + tokens_out`
+  LLM teks per hari, reset 00.00 WIB. Default 2000000. Lewat batas → L4 LLM `unavailable` dengan
+  note "Pemeriksaan AI dijeda sementara karena batas harian; aturan tetap berjalan."; L3/L4 aturan
+  tetap jalan.
+- Cache hasil L4 LLM (NFR-COST-02): input identik (spasi caption dinormalisasi) dalam 24 jam
+  tidak memanggil provider dan tidak menghitung token. Maks. 512 entri.
+- Penghitung rate limit, anggaran token, dan cache semuanya **in-memory**: kembali ke nol saat
+  instance restart, redeploy, atau scale-to-zero, dan tidak dibagi bila ada lebih dari satu replika.
 - Perintah di atas masuk ke riwayat shell. Bila tidak mau, isi secret lewat dashboard
   (app → *Environment Variables*, tandai sebagai secret).
 
@@ -90,6 +105,19 @@ curl -s -o /dev/null -D - -X OPTIONS "$API/analyze/caption" \
   -H 'Origin: https://contoh-jahat.test' -H 'Access-Control-Request-Method: POST' \
   | grep -qi '^access-control-allow-origin' && echo "GAGAL: origin asing diizinkan" || echo "OK"
 ```
+
+Pengaman biaya (T-20), setelah `RATE_LIMIT` terpasang:
+
+```bash
+# Rate limit: N kali 200 (N = batas per menit) lalu 429
+for i in $(seq 1 12); do curl -s -o /dev/null -w "%{http_code}
+" -X POST "$API/analyze/caption"   -H 'content-type: application/json' -d '{"caption":"tes","ocr_text":null,"lang":"id"}'; done
+```
+- Segera setelahnya buka `$WEB` dari HP dengan data seluler: analisis harus tetap jalan. Bila ikut
+  429, proxy tidak menambahkan IP klien di kanan `X-Forwarded-For` seperti dugaan: semua pengguna
+  berbagi satu kuota. Jangan demo dengan limit ketat; longgarkan `RATE_LIMIT` dan laporkan.
+- Kirim caption yang sama dua kali: `latency_ms` L4 LLM kedua jauh lebih kecil (cache) dan log
+  memuat `cache=hit`.
 
 Lalu buka `$WEB`: status `/health` harus `ok`, dan tombol **Uji caption** menampilkan JSON
 yang lolos validasi kontrak.

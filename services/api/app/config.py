@@ -37,6 +37,39 @@ def parse_max_tokens(raw: str | None) -> int:
     return tokens
 
 
+DEFAULT_RATE_LIMIT = "10/minute;60/day"  # NFR-SEC-06 (SPEC §6)
+DEFAULT_DAILY_TOKEN_BUDGET = 2_000_000  # NFR-COST-01, deviasi: token, bukan USD (T-20)
+
+
+def parse_rate_limit(raw: str | None) -> str:
+    """Notasi `limits` dipisah `;`, mis. `10/minute;60/day`. Tidak valid → ValueError saat start."""
+    from limits import parse_many  # dependensi slowapi
+
+    value = _blank_to_none(raw)
+    if value is None:
+        return DEFAULT_RATE_LIMIT
+    try:
+        parsed = parse_many(value)
+    except ValueError:
+        parsed = []
+    if not parsed:
+        raise ValueError("RATE_LIMIT tidak valid; contoh: 10/minute;60/day")
+    return value
+
+
+def parse_daily_token_budget(raw: str | None) -> int:
+    value = _blank_to_none(raw)
+    if value is None:
+        return DEFAULT_DAILY_TOKEN_BUDGET
+    try:
+        tokens = int(value)
+    except ValueError:
+        tokens = 0
+    if tokens <= 0:
+        raise ValueError("DAILY_TOKEN_BUDGET harus bilangan bulat positif")
+    return tokens
+
+
 @dataclass(frozen=True)
 class Settings:
     """Default tanpa key/model: `Settings(...)` di tes tidak pernah membaca env.
@@ -51,6 +84,8 @@ class Settings:
     # Dikirim sebagai `reasoning_effort` bila diisi; None → tidak dikirim (model non-reasoning).
     # Tidak divalidasi di sini: nilai yang ditolak provider terlihat sebagai http_status=400 di log.
     text_reasoning_effort: str | None = None
+    rate_limit: str = DEFAULT_RATE_LIMIT
+    daily_token_budget: int = DEFAULT_DAILY_TOKEN_BUDGET
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -60,4 +95,6 @@ class Settings:
             fireworks_text_model=_blank_to_none(os.environ.get("FIREWORKS_TEXT_MODEL")),
             text_max_tokens=parse_max_tokens(os.environ.get("TEXT_MAX_TOKENS")),
             text_reasoning_effort=_blank_to_none(os.environ.get("TEXT_REASONING_EFFORT")),
+            rate_limit=parse_rate_limit(os.environ.get("RATE_LIMIT")),
+            daily_token_budget=parse_daily_token_budget(os.environ.get("DAILY_TOKEN_BUDGET")),
         )
