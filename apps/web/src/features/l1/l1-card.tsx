@@ -174,47 +174,39 @@ export function L1Card({ file, images, areas = NO_AREAS, onResult }: Props) {
   const redacted = boxes.length > 0;
 
   return (
-    <>
-      <LayerCard title={L1_TITLE} layer={result} />
-      {/* Langkah sendiri (bukan di kartu metadata): pratinjau, area + toggle, Cari wajah, unduh sebagai CTA utama. */}
-      <section className="card safe-card" aria-labelledby="versi-aman">
-        <h2 id="versi-aman">Versi aman untuk diunggah</h2>
-        <p className="muted small">
-          Versi ini tanpa metadata. Bagian yang dicentang disamarkan dengan mosaik; hapus centang bila tidak perlu.
-        </p>
-        <RedactPanel
-          areas={allAreas}
-          disabled={disabled}
-          onToggle={onToggle}
-          afterUrl={safe.phase === "ready" ? safe.url : null}
-          beforeUrl={beforeUrl}
-        />
-        <FaceSearch state={faceSearch} ready={images.work.width > 0} onSearch={onSearchFaces} />
-        <div className="actions">
-          {safe.phase === "preparing" && (
-            <button type="button" className="primary block" disabled>
-              {redacted ? "Menyiapkan versi aman…" : "Menyiapkan versi tanpa metadata…"}
+    <LayerCard title={L1_TITLE} layer={result}>
+      <RedactPanel
+        areas={allAreas}
+        disabled={disabled}
+        onToggle={onToggle}
+        afterUrl={safe.phase === "ready" ? safe.url : null}
+        beforeUrl={beforeUrl}
+      />
+      <FaceSearch state={faceSearch} ready={images.work.width > 0} onSearch={onSearchFaces} />
+      <div className="actions">
+        {safe.phase === "preparing" && (
+          <button type="button" disabled>
+            {redacted ? "Menyiapkan versi aman…" : "Menyiapkan versi tanpa metadata…"}
+          </button>
+        )}
+        {safe.phase === "ready" && (
+          <a className="button" href={safe.url} download={safe.name}>
+            {safe.name === SAFE_NAME_REDACTED
+              ? "Unduh versi aman (tanpa metadata, bagian sensitif disamarkan)"
+              : "Unduh versi tanpa metadata"}
+          </a>
+        )}
+        {safe.phase === "failed" && (
+          <>
+            <p className="status error" role="alert">
+              {SAFE_FAILED_MESSAGE}
+            </p>
+            <button type="button" onClick={() => prepareSafe(boxesRef.current)}>
+              Coba lagi
             </button>
-          )}
-          {safe.phase === "ready" && (
-            <a className="button primary block" href={safe.url} download={safe.name}>
-              {safe.name === SAFE_NAME_REDACTED
-                ? "Unduh versi aman (tanpa metadata, bagian sensitif disamarkan)"
-                : "Unduh versi tanpa metadata"}
-            </a>
-          )}
-          {safe.phase === "failed" && (
-            <>
-              <p className="status error" role="alert">
-                {SAFE_FAILED_MESSAGE}
-              </p>
-              <button type="button" className="primary block" onClick={() => prepareSafe(boxesRef.current)}>
-                Coba lagi
-              </button>
-            </>
-          )}
-        </div>
-      </section>
-    </>
+          </>
+        )}
+      </div>
+    </LayerCard>
   );
 }

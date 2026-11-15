@@ -78,37 +78,14 @@ export function PhotoInput({ onSubmit, onChange }: Props) {
   return (
     <section className="card input-card">
       <h2>Periksa sebelum unggah</h2>
-      <p className="muted small">Foto diperiksa di perangkatmu dan tidak dikirim. Yang dikirim ke server hanya caption dan teks yang terbaca dari foto.</p>
+      <p className="muted">Pilih satu foto. Foto diperiksa di perangkatmu dan tidak dikirim; yang dikirim ke server hanya caption dan teks yang terbaca dari foto.</p>
 
-      <p className="field-label" aria-hidden="true">
-        Foto
-      </p>
-      <input
-        id={ids.file}
-        className="visually-hidden file-input"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={onFile}
-        aria-describedby={ids.counter + "-hint"}
-      />
-      <label htmlFor={ids.file} className="button secondary block file-button">
-        {photo.phase === "ready" ? "Ganti foto" : "Pilih foto"}
+      <label htmlFor={ids.file} className="field-label">
+        Foto (JPG, PNG, atau WebP, maks. 10 MB)
       </label>
-      <p id={ids.counter + "-hint"} className="muted small file-hint">
-        {photo.phase === "ready" ? (
-          <>
-            Dipilih: <span className="file-name">{photo.file.name}</span>
-          </>
-        ) : (
-          "JPG, PNG, atau WebP, maksimal 10 MB. Belum ada foto dipilih."
-        )}
-      </p>
+      <input id={ids.file} type="file" accept="image/jpeg,image/png,image/webp" onChange={onFile} />
 
-      {photo.phase === "checking" && (
-        <p className="muted" role="status">
-          Menyiapkan foto…
-        </p>
-      )}
+      {photo.phase === "checking" && <p className="muted">Menyiapkan foto…</p>}
       {photo.phase === "error" && (
         <p className="status error" role="alert">
           {photo.message}
@@ -118,7 +95,10 @@ export function PhotoInput({ onSubmit, onChange }: Props) {
         <figure className="preview">
           {/* eslint-disable-next-line @next/next/no-img-element -- blob URL lokal */}
           <img src={photo.previewUrl} alt="Pratinjau foto yang dipilih" width={photo.images.send.width} height={photo.images.send.height} />
-          <figcaption className="muted small">Pratinjau. Foto tetap di perangkatmu.</figcaption>
+          <figcaption className="muted">
+            {photo.images.work.width}×{photo.images.work.height} px di perangkat · {photo.images.send.width}×{photo.images.send.height} px
+            untuk dikirim · siap dalam {photo.ms} ms
+          </figcaption>
         </figure>
       )}
 
@@ -144,10 +124,9 @@ export function PhotoInput({ onSubmit, onChange }: Props) {
         </p>
       )}
 
-      <button type="button" className="primary block" onClick={submit} disabled={!canSubmit}>
+      <button type="button" onClick={submit} disabled={!canSubmit}>
         Periksa
       </button>
-      {!canSubmit && photo.phase !== "ready" && <p className="muted small">Pilih foto dulu untuk mulai memeriksa.</p>}
       {notice && <p className="muted">{notice}</p>}
     </section>
   );
