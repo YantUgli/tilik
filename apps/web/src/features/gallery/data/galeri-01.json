@@ -1,0 +1,286 @@
+{
+  "schema_version": "1.0",
+  "request_id": "galeri-01",
+  "mode": "precomputed",
+  "layers": [
+    {
+      "layer": "L1",
+      "provider": "browser",
+      "status": "ok",
+      "latency_ms": 32,
+      "findings": [],
+      "note": null
+    },
+    {
+      "layer": "L3",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 0,
+      "findings": [
+        {
+          "id": "c-1",
+          "layer": "L3",
+          "category": "klasifikasi",
+          "severity": "tinggi",
+          "source": "rule",
+          "message": "Tampak ada tanda klasifikasi dokumen.",
+          "rule_ref": "R-L3-002",
+          "evidence": {
+            "text": "RAHASIA",
+            "where": "ocr",
+            "bboxes": [
+              [
+                0.3917,
+                0.3413,
+                0.11410000000000003,
+                0.015400000000000025
+              ]
+            ]
+          },
+          "redactable": true,
+          "experimental": false,
+          "explanation": "Dokumen bertanda klasifikasi tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto atau screenshot grup.",
+          "basis": "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+        },
+        {
+          "id": "c-2",
+          "layer": "L3",
+          "category": "surat_telegram",
+          "severity": "tinggi",
+          "source": "rule",
+          "message": "Tampak ada judul Surat Telegram.",
+          "rule_ref": "R-L3-004",
+          "evidence": {
+            "text": "SURAT TELEGRAM",
+            "where": "ocr",
+            "bboxes": [
+              [
+                0.3233,
+                0.24,
+                0.12840000000000001,
+                0.023299999999999987
+              ],
+              [
+                0.4642,
+                0.24,
+                0.21159999999999995,
+                0.023299999999999987
+              ]
+            ]
+          },
+          "redactable": true,
+          "experimental": false,
+          "explanation": "Surat Telegram adalah naskah dinas. Isinya tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto atau screenshot grup.",
+          "basis": "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+        },
+        {
+          "id": "c-3",
+          "layer": "L3",
+          "category": "surat_telegram",
+          "severity": "tinggi",
+          "source": "rule",
+          "message": "Tampak ada nomor Surat Telegram.",
+          "rule_ref": "R-L3-005",
+          "evidence": {
+            "text": "ST/1192/2026",
+            "where": "ocr",
+            "bboxes": [
+              [
+                0.4583,
+                0.2813,
+                0.1759,
+                0.016699999999999993
+              ]
+            ]
+          },
+          "redactable": true,
+          "experimental": false,
+          "explanation": "Nomor ST/TR menandakan foto ini memuat Surat Telegram. Isinya tidak boleh tersebar di luar kedinasan, termasuk sebagai latar foto atau screenshot grup.",
+          "basis": "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+        },
+        {
+          "id": "c-4",
+          "layer": "L3",
+          "category": "blok_alamat",
+          "severity": "tinggi",
+          "source": "rule",
+          "message": "Tampak ada blok alamat surat dinas (Dari/Kepada/Tembusan).",
+          "rule_ref": "R-L3-006",
+          "evidence": {
+            "text": "DARI : DANYON INFANTERI 999/CONTOH\nKEPADA : PARA DANKI YONIF 999/CONTOH\nTEMBUSAN :",
+            "where": "ocr",
+            "bboxes": [
+              [
+                0.1517,
+                0.4133,
+                0.06159999999999999,
+                0.025399999999999978
+              ],
+              [
+                0.3775,
+                0.42,
+                0.0025000000000000022,
+                0.011300000000000032
+              ],
+              [
+                0.3917,
+                0.416,
+                0.11000000000000004,
+                0.015300000000000036
+              ],
+              [
+                0.5133,
+                0.416,
+                0.13590000000000002,
+                0.015300000000000036
+              ],
+              [
+                0.66,
+                0.416,
+                0.16579999999999995,
+                0.015300000000000036
+              ],
+              [
+                0.1517,
+                0.4533,
+                0.10999999999999999,
+                0.015400000000000025
+              ],
+              [
+                0.3775,
+                0.4573,
+                0.0025000000000000022,
+                0.011400000000000021
+              ],
+              [
+                0.3917,
+                0.4533,
+                0.07,
+                0.015400000000000025
+              ],
+              [
+                0.4708,
+                0.4533,
+                0.07669999999999999,
+                0.015400000000000025
+              ],
+              [
+                0.5575,
+                0.4533,
+                0.07999999999999996,
+                0.015400000000000025
+              ],
+              [
+                0.6475,
+                0.4533,
+                0.16580000000000006,
+                0.015400000000000025
+              ],
+              [
+                0.15,
+                0.4907,
+                0.14920000000000003,
+                0.01529999999999998
+              ],
+              [
+                0.3775,
+                0.4947,
+                0.0025000000000000022,
+                0.011300000000000032
+              ]
+            ]
+          },
+          "redactable": true,
+          "experimental": false,
+          "explanation": "Blok Dari/Kepada/Tembusan adalah ciri naskah dinas. Bila ini dokumen kedinasan, jangan disebarkan, termasuk sebagai latar foto.",
+          "basis": "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+        },
+        {
+          "id": "c-5",
+          "layer": "L3",
+          "category": "derajat",
+          "severity": "tinggi",
+          "source": "rule",
+          "message": "Tampak ada tanda derajat surat (Kilat/Segera).",
+          "rule_ref": "R-L3-007",
+          "evidence": {
+            "text": "KILAT",
+            "where": "ocr",
+            "bboxes": [
+              [
+                0.3917,
+                0.3787,
+                0.0716,
+                0.015300000000000036
+              ]
+            ]
+          },
+          "redactable": true,
+          "experimental": false,
+          "explanation": "Tanda derajat adalah ciri naskah dinas. Bila ini dokumen kedinasan, jangan disebarkan, termasuk sebagai latar foto.",
+          "basis": "Amanat Upacara Bendera 17 April 2024 (Kodim 1606): Surat Telegram yang bocor; perintah pengamanan berita"
+        }
+      ],
+      "note": null
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 0,
+      "findings": [],
+      "note": null
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": "fireworks",
+      "latency_ms": 1224,
+      "findings": [
+        {
+          "id": "c-6",
+          "layer": "L4",
+          "category": "jadwal_pergerakan",
+          "severity": "perhatian",
+          "source": "llm",
+          "message": "Tampak ada informasi jadwal atau pergerakan.",
+          "explanation": "Dokumen menyebut tenggat laporan kesiapan H-1 yang bisa memberi petunjuk waktu kegiatan. Sebaiknya tidak menyebarkan dokumen internal satuan ke media sosial.",
+          "evidence": {
+            "text": "Laporan kesiapan dikirim paling lambat H-1.",
+            "where": "ocr"
+          },
+          "redactable": false,
+          "experimental": false
+        },
+        {
+          "id": "c-7",
+          "layer": "L4",
+          "category": "lokasi_penugasan",
+          "severity": "perhatian",
+          "source": "llm",
+          "message": "Tampak ada informasi lokasi penugasan.",
+          "explanation": "Nama satuan dan jajarannya terlihat jelas di dokumen. Informasi satuan sebaiknya tidak diunggah agar tidak memudahkan pihak lain mengetahui struktur dan lokasi tugas.",
+          "evidence": {
+            "text": "BATALYON INFANTERI 999/CONTOH",
+            "where": "ocr"
+          },
+          "redactable": false,
+          "experimental": false
+        }
+      ],
+      "note": null
+    }
+  ],
+  "has_text_document": null,
+  "risk": {
+    "level": "tinggi",
+    "incomplete": false,
+    "top_reasons": [
+      "c-1",
+      "c-2",
+      "c-3",
+      "c-4",
+      "c-5"
+    ]
+  }
+}

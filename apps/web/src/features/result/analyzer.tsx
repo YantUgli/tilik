@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { GalleryPicker, GalleryView } from "@/features/gallery/gallery";
+import type { GalleryItem } from "@/features/gallery/items";
 import { L1Card } from "@/features/l1/l1-card";
 import { PhotoInput, type PreparedInput } from "@/features/input/photo-input";
 import { createOcrRunner, type OcrOutcome, type OcrRunner } from "@/features/ocr/run";
@@ -8,9 +10,10 @@ import { createTesseractWorker } from "@/features/ocr/tesseract";
 import { collectAreas } from "@/features/redact/areas";
 import { analyzeCaption, resolveApiUrl } from "@/lib/api";
 import { encodeSafeJpeg, type PreparedImages } from "@/lib/image/downscale";
-import { INCOMPLETE_NOTE, RISK_LABEL, computeRisk } from "@/lib/risk";
+import { computeRisk } from "@/lib/risk";
 import type { LayerResult } from "@/lib/validate";
 import { LayerCard } from "./layer-card";
+import { RiskCard } from "./risk-card";
 import { OCR_FAILED_NOTE, OCR_PENDING_NOTE, SERVER_TITLES, initialSession, sessionReducer } from "./session";
 
 const API_URL = resolveApiUrl(process.env.NEXT_PUBLIC_API_URL);
@@ -43,6 +46,10 @@ export function Analyzer() {
   /** id analisis yang masih berlaku; 0 = tidak ada (foto diganti/dihapus). */
   const active = useRef(0);
   const ocr = useRef<OcrRunner | null>(null);
+  /** Contoh galeri yang terbuka (FR-UI-02). Galeri dan analisis sendiri tidak pernah tampil bersamaan. */
+  const [example, setExample] = useState<GalleryItem | null>(null);
+  /** Dinaikkan saat contoh dibuka supaya form unggah kosong lagi. */
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => () => ocr.current?.cancel(), []);
 
@@ -64,11 +71,21 @@ export function Analyzer() {
   }, []);
 
   const onChange = useCallback(() => {
+    setExample(null); // memilih foto sendiri menutup galeri
     active.current = 0;
     ocr.current?.cancel();
     setInput(null);
     dispatch({ type: "reset" });
   }, []);
+
+  const openExample = useCallback(
+    (item: GalleryItem) => {
+      onChange(); // hentikan analisis yang berjalan, buang hasilnya
+      setFormKey((k) => k + 1);
+      setExample(item);
+    },
+    [onChange],
+  );
 
   const id = session.id;
   const onL1 = useCallback((result: LayerResult) => dispatch({ type: "l1", id, result }), [id]);
@@ -82,22 +99,19 @@ export function Analyzer() {
 
   return (
     <>
-      <PhotoInput onSubmit={onSubmit} onChange={onChange} />
+      {example ? (
+        <GalleryView item={example} onClose={() => setExample(null)} />
+      ) : (
+        <GalleryPicker onOpen={openExample} />
+      )}
 
-      {input && id !== 0 && (
+      <PhotoInput key={formKey} onSubmit={onSubmit} onChange={onChange} />
+
+      {!example && input && id !== 0 && (
         <div className="results">
-          <section className={`card risk-card ${risk ? `risk-${risk.level}` : ""}`} aria-live="polite">
-            <h2>Risiko akhir</h2>
-            {risk ? (
-              <p className="risk-level">
-                <strong>{RISK_LABEL[risk.level]}</strong>
-                {risk.incomplete && <span className="status warn"> · {INCOMPLETE_NOTE}</span>}
-              </p>
-            ) : (
-              <p className="muted">Sedang dianalisis…</p>
-            )}
+          <RiskCard risk={risk}>
             {server?.problem === "busy" && <p className="status warn">{server.message}</p>}
-          </section>
+          </RiskCard>
 
           <L1Card key={id} file={input.file} images={input.images} areas={areas} onResult={onL1} />
 

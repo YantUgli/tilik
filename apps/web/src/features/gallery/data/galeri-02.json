@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.0",
+  "request_id": "galeri-02",
+  "mode": "precomputed",
+  "layers": [
+    {
+      "layer": "L1",
+      "provider": "browser",
+      "status": "ok",
+      "latency_ms": 8,
+      "findings": [
+        {
+          "id": "b-1",
+          "layer": "L1",
+          "category": "gps",
+          "severity": "tinggi",
+          "source": "exif",
+          "message": "Foto menyimpan titik lokasi tempat foto diambil.",
+          "explanation": "Siapa pun yang mendapat file aslinya bisa membuka titik ini di peta, misalnya rumah, asrama, atau tempat tugas. Angka yang ditampilkan sudah dibulatkan; angka aslinya di foto jauh lebih presisi. Unggah versi tanpa metadata.",
+          "evidence": {
+            "text": "sekitar -6,90, 107,61",
+            "where": "image"
+          }
+        },
+        {
+          "id": "b-2",
+          "layer": "L1",
+          "category": "waktu",
+          "severity": "info",
+          "source": "exif",
+          "message": "Foto menyimpan waktu pengambilan.",
+          "explanation": "Waktu pengambilan bisa dipakai menebak pola kegiatan, misalnya jam berangkat atau jadwal rutin.",
+          "evidence": {
+            "text": "14 November 2026, 06.30",
+            "where": "image"
+          }
+        },
+        {
+          "id": "b-3",
+          "layer": "L1",
+          "category": "perangkat",
+          "severity": "info",
+          "source": "exif",
+          "message": "Foto menyimpan merek dan tipe HP.",
+          "explanation": "Merek, tipe, dan aplikasi membantu orang lain mengenali perangkat dan mencocokkan foto-fotomu.",
+          "evidence": {
+            "text": "ContohHP Contoh X1",
+            "where": "image"
+          }
+        }
+      ],
+      "note": null
+    },
+    {
+      "layer": "L3",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 0,
+      "findings": [],
+      "note": null
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 0,
+      "findings": [
+        {
+          "id": "c-1",
+          "layer": "L4",
+          "category": "jadwal_pergerakan",
+          "severity": "perhatian",
+          "source": "rule",
+          "message": "Caption menyebut jadwal pergerakan satuan.",
+          "rule_ref": "R-L4-001",
+          "evidence": {
+            "text": "berangkat",
+            "where": "caption"
+          },
+          "redactable": false,
+          "experimental": false,
+          "explanation": "Jadwal keberangkatan atau kepulangan satuan bisa dimanfaatkan pihak yang tidak berhak. Sebaiknya kabar seperti ini dibagikan setelah satuan tiba dengan aman.",
+          "basis": "Prinsip pengamanan berita (Amanat Upacara Bendera 17 April 2024)"
+        },
+        {
+          "id": "c-2",
+          "layer": "L4",
+          "category": "jadwal_pergerakan",
+          "severity": "perhatian",
+          "source": "rule",
+          "message": "Caption menyebut jadwal pergerakan satuan.",
+          "rule_ref": "R-L4-001",
+          "evidence": {
+            "text": "kumpul",
+            "where": "caption"
+          },
+          "redactable": false,
+          "experimental": false,
+          "explanation": "Jadwal keberangkatan atau kepulangan satuan bisa dimanfaatkan pihak yang tidak berhak. Sebaiknya kabar seperti ini dibagikan setelah satuan tiba dengan aman.",
+          "basis": "Prinsip pengamanan berita (Amanat Upacara Bendera 17 April 2024)"
+        }
+      ],
+      "note": null
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": "fireworks",
+      "latency_ms": 778,
+      "findings": [
+        {
+          "id": "c-3",
+          "layer": "L4",
+          "category": "jadwal_pergerakan",
+          "severity": "tinggi",
+          "source": "llm",
+          "message": "Tampak ada informasi jadwal atau pergerakan.",
+          "explanation": "Caption ini menyebutkan waktu keberangkatan dan jam kumpul pasukan secara spesifik. Informasi seperti ini sebaiknya tidak disebar ke media sosial karena bisa membahayakan keselamatan prajurit dan keluarganya.",
+          "evidence": {
+            "text": "besok suami berangkat satgas, kumpul di yonif jam 4",
+            "where": "caption"
+          },
+          "redactable": false,
+          "experimental": false
+        }
+      ],
+      "note": null
+    }
+  ],
+  "has_text_document": null,
+  "risk": {
+    "level": "tinggi",
+    "incomplete": false,
+    "top_reasons": [
+      "b-1",
+      "c-3"
+    ]
+  }
+}

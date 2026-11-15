@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "request_id": "galeri-03",
+  "mode": "precomputed",
+  "layers": [
+    {
+      "layer": "L1",
+      "provider": "browser",
+      "status": "ok",
+      "latency_ms": 0,
+      "findings": [],
+      "note": null
+    },
+    {
+      "layer": "L3",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 0,
+      "findings": [],
+      "note": null
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": "rule",
+      "latency_ms": 0,
+      "findings": [],
+      "note": null
+    },
+    {
+      "layer": "L4",
+      "status": "ok",
+      "provider": "fireworks",
+      "latency_ms": 526,
+      "findings": [],
+      "note": null
+    }
+  ],
+  "has_text_document": null,
+  "risk": {
+    "level": "aman",
+    "incomplete": false,
+    "top_reasons": []
+  }
+}

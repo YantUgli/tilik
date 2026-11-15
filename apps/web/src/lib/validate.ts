@@ -1,6 +1,7 @@
 // Validator respons/request terhadap kontrak (JSON Schema draft 2020-12).
 // Skema berasal dari src/contracts/ (salinan hasil `pnpm sync-contracts`).
 import Ajv2020, { type ErrorObject, type ValidateFunction } from "ajv/dist/2020";
+import analysisResultSchema from "@/contracts/analysis-result.schema.json";
 import captionRequestSchema from "@/contracts/caption-request.schema.json";
 import captionResponseSchema from "@/contracts/caption-response.schema.json";
 import errorSchema from "@/contracts/error.schema.json";
@@ -13,7 +14,7 @@ export type ValidationResult = { valid: true } | { valid: false; errors: string[
 const ajv = new Ajv2020({ allErrors: true, strict: true, strictTypes: false });
 // Skema yang dirujuk lewat $ref ("finding.schema.json", "layer-result.schema.json")
 // didaftarkan dengan $id-nya masing-masing.
-ajv.addSchema([findingSchema, layerResultSchema]);
+ajv.addSchema([findingSchema, layerResultSchema, analysisResultSchema]);
 
 const compile = (schema: object) => {
   let fn: ValidateFunction | undefined;
@@ -44,6 +45,7 @@ const compileRef = (id: string) => (data: unknown): ValidationResult => {
 
 export const validateFinding = compileRef("finding.schema.json");
 export const validateLayerResult = compileRef("layer-result.schema.json");
+export const validateAnalysisResult = compileRef("analysis-result.schema.json");
 
 // Tipe TS yang mencerminkan contracts/finding.schema.json dan layer-result.schema.json.
 export type Severity = "info" | "perhatian" | "tinggi";
