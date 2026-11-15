@@ -12,9 +12,13 @@ export type Risk = { level: RiskLevel; incomplete: boolean };
 const RANK: Record<RiskLevel, number> = { aman: 0, perhatian: 1, tinggi: 2 };
 const fromSeverity = (s: Severity): RiskLevel => (s === "info" ? "aman" : s);
 
-export function computeRisk(layers: readonly LayerResult[]): Risk {
+/**
+ * `extraIncomplete`: pemeriksaan yang tidak punya LayerResult sendiri gagal (mis. OCR di browser,
+ * T-13), sehingga hasil diberi catatan "pemeriksaan belum lengkap" (FR-RISK-03).
+ */
+export function computeRisk(layers: readonly LayerResult[], opts: { extraIncomplete?: boolean } = {}): Risk {
   let level: RiskLevel = "aman";
-  let incomplete = false;
+  let incomplete = opts.extraIncomplete === true;
   for (const layer of layers) {
     // `skipped` (input kosong) bukan kegagalan, jadi tidak membuat hasil belum lengkap.
     if (layer.status === "error" || layer.status === "unavailable") incomplete = true;

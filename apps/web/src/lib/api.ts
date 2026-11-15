@@ -1,5 +1,6 @@
 // Klien API TILIK: /health dan /analyze/caption (uji koneksi T-08, analisis caption T-23).
 import {
+  validateCaptionRequest,
   validateCaptionResponse,
   validateError,
   validateHealth,
@@ -7,9 +8,13 @@ import {
   type ValidationResult,
 } from "@/lib/validate";
 
+/** Kata OCR (contracts/caption-request.schema.json#/$defs/OcrWord): bbox [x0, y0, x1, y1] relatif 0..1. */
+export type OcrWord = { text: string; conf: number; bbox: [number, number, number, number] };
+
 export type CaptionRequest = {
   caption: string | null;
   ocr_text: string | null;
+  ocr_words?: OcrWord[] | null;
   lang: "id";
 };
 
@@ -164,15 +169,20 @@ const placeholders = (status: "unavailable" | "error", note: string): LayerResul
 
 /**
  * Analisis caption. Tidak pernah melempar: 429 → sibuk, gagal jaringan/HTTP → tidak tersedia,
- * respons tidak sesuai kontrak → lapis server ditandai `error`. OCR baru ada di T-13, jadi `ocrText` biasanya null.
+ * respons tidak sesuai kontrak → lapis server ditandai `error`. `ocr` null = OCR gagal/tidak ada teks.
  */
 export async function analyzeCaption(
   baseUrl: string | null,
   caption: string,
-  ocrText: string | null,
+  ocr: { ocr_text: string | null; ocr_words: OcrWord[] | null } | null,
   opts?: FetchOptions,
 ): Promise<CaptionResult> {
-  const out = await postCaption(baseUrl, { caption, ocr_text: ocrText, lang: "id" }, opts);
+  const base: CaptionRequest = { caption, ocr_text: ocr?.ocr_text ?? null, lang: "id" };
+  let body: CaptionRequest = ocr?.ocr_words?.length ? { ...base, ocr_words: ocr.ocr_words } : base;
+  // Server menolak request tidak valid dengan 400 (seluruh analisis caption gagal). Bila ocr_words
+  // yang bermasalah, kirim tanpa ocr_words: aturan tetap memakai ocr_text apa adanya (FR-OCR-02).
+  if (body !== base && !validateCaptionRequest(body).valid) body = base;
+  const out = await postCaption(baseUrl, body, opts);
   switch (out.kind) {
     case "ok":
       return { layers: (out.body as { layers: LayerResult[] }).layers, problem: null, message: null };

@@ -18,14 +18,14 @@ const submitted = (id: number): Session => sessionReducer(initialSession, { type
 
 describe("sessionReducer (hasil basi)", () => {
   it("submit → l1 dan server pending", () => {
-    expect(submitted(1)).toEqual({ id: 1, l1: null, server: null });
+    expect(submitted(1)).toEqual({ id: 1, l1: null, server: null, ocr: "pending" });
   });
 
   it("hasil untuk id aktif disimpan", () => {
     let s = submitted(1);
     s = sessionReducer(s, { type: "l1", id: 1, result: l1 });
     s = sessionReducer(s, { type: "server", id: 1, result: server });
-    expect(s).toEqual({ id: 1, l1, server });
+    expect(s).toEqual({ id: 1, l1, server, ocr: "pending" });
   });
 
   it("foto diganti/dihapus → semua hasil hilang", () => {

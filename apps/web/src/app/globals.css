@@ -270,3 +270,8 @@ textarea[aria-invalid="true"] {
   font-size: 1.25rem;
   margin: 0.25rem 0 0;
 }
+
+/* T-13: catatan OCR di kartu "Dokumen dinas" */
+.small {
+  font-size: 0.875rem;
+}
