@@ -13,6 +13,16 @@ export type PreparedImages = {
 };
 
 export const SEND_JPEG_QUALITY = 0.85;
+/** Versi aman L1 (unduhan tanpa metadata). FR-L1-03. */
+export const SAFE_JPEG_QUALITY = 0.92;
+
+/**
+ * Versi aman: re-encode canvas dari bitmap kerja (orientasi sudah diterapkan, ≤ 2048 px).
+ * Canvas tidak membawa EXIF/XMP/IPTC/ICC dari file asli. Resolusi ≤ 2048 px adalah keputusan sadar.
+ */
+export async function encodeSafeJpeg(work: ImageBitmap): Promise<Blob> {
+  return (await encodeJpeg(work, WORK_MAX_SIDE, SAFE_JPEG_QUALITY)).blob;
+}
 
 export async function prepareImages(file: Blob): Promise<PreparedImages> {
   // Decode dengan orientasi EXIF diterapkan, sehingga lebar/tinggi di bawah sudah sesuai tampilan.
@@ -26,7 +36,7 @@ export async function prepareImages(file: Blob): Promise<PreparedImages> {
   }
   if (work !== oriented) oriented.close(); // bitmap penuh (bisa ~48 MB untuk 12 MP) segera dilepas
   try {
-    const send = await encodeJpeg(work, SEND_MAX_SIDE);
+    const send = await encodeJpeg(work, SEND_MAX_SIDE, SEND_JPEG_QUALITY);
     return { work, send };
   } catch (err) {
     work.close();
@@ -41,7 +51,7 @@ async function resizeBitmap(src: ImageBitmap, max: number): Promise<ImageBitmap>
   return createImageBitmap(src, { resizeWidth: t.width, resizeHeight: t.height, resizeQuality: "high" });
 }
 
-async function encodeJpeg(src: ImageBitmap, max: number): Promise<PreparedImages["send"]> {
+async function encodeJpeg(src: ImageBitmap, max: number, quality: number): Promise<PreparedImages["send"]> {
   const { width, height } = targetSize(src.width, src.height, max);
   const canvas = makeCanvas(width, height);
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
@@ -52,8 +62,8 @@ async function encodeJpeg(src: ImageBitmap, max: number): Promise<PreparedImages
   ctx.drawImage(src, 0, 0, width, height);
   const blob =
     canvas instanceof HTMLCanvasElement
-      ? await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", SEND_JPEG_QUALITY))
-      : await canvas.convertToBlob({ type: "image/jpeg", quality: SEND_JPEG_QUALITY });
+      ? await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", quality))
+      : await canvas.convertToBlob({ type: "image/jpeg", quality });
   if (!blob) throw new Error("Gagal meng-encode JPEG");
   return { blob, width, height };
 }
