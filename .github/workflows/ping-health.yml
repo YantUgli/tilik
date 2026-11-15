@@ -1,0 +1,20 @@
+# T-22 (NFR-AVAIL-02): ping /health tiap 10 menit supaya API di FastAPI Cloud tidak tidur
+# (scale-to-zero) saat juri menilai. /health tidak terkena rate limit (T-20), jadi tidak memakan
+# kuota pengguna. Tanpa secret, checkout, atau action pihak ketiga.
+name: ping-health
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    permissions: {}
+    timeout-minutes: 2
+    steps:
+      - name: GET /health
+        run: curl -fsS --retry 3 --retry-delay 5 --max-time 30 https://tilik-api.fastapicloud.dev/health
