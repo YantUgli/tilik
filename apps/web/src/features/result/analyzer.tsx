@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { PRIVACY_NOTE, gateReducer, hasConsent, saveConsent, sessionStore, type Gate } from "@/features/disclaimer/consent";
+import { DisclaimerDialog } from "@/features/disclaimer/disclaimer-dialog";
 import { GalleryPicker, GalleryView } from "@/features/gallery/gallery";
 import type { GalleryItem } from "@/features/gallery/items";
 import { L1Card } from "@/features/l1/l1-card";
@@ -53,7 +55,10 @@ export function Analyzer() {
 
   useEffect(() => () => ocr.current?.cancel(), []);
 
-  const onSubmit = useCallback((inp: PreparedInput) => {
+  /** Input yang ditahan sampai disclaimer disetujui (FR-UI-03). */
+  const [gate, setGate] = useState<Gate<PreparedInput>>({ status: "idle" });
+
+  const run = useCallback((inp: PreparedInput) => {
     const id = ++nextId.current;
     active.current = id;
     const runner = (ocr.current ??= createOcrRunner(createTesseractWorker));
@@ -70,7 +75,27 @@ export function Analyzer() {
     });
   }, []);
 
+  /** "Periksa": pertama kali di sesi browser ditahan dulu; L1/OCR/request belum jalan. */
+  const onSubmit = useCallback(
+    (inp: PreparedInput) => {
+      if (hasConsent(sessionStore())) run(inp);
+      else setGate((g) => gateReducer(g, { type: "hold", input: inp }));
+    },
+    [run],
+  );
+
+  const onConfirm = useCallback(() => {
+    const next = gateReducer(gate, { type: "confirm" });
+    setGate(next);
+    if (next.status !== "confirmed") return;
+    saveConsent(sessionStore());
+    run(next.input);
+  }, [gate, run]);
+
+  const onCancel = useCallback(() => setGate((g) => gateReducer(g, { type: "cancel" })), []);
+
   const onChange = useCallback(() => {
+    setGate({ status: "idle" });
     setExample(null); // memilih foto sendiri menutup galeri
     active.current = 0;
     ocr.current?.cancel();
@@ -106,6 +131,9 @@ export function Analyzer() {
       )}
 
       <PhotoInput key={formKey} onSubmit={onSubmit} onChange={onChange} />
+      <p className="muted small privacy-note">{PRIVACY_NOTE}</p>
+
+      {gate.status === "pending" && <DisclaimerDialog onConfirm={onConfirm} onCancel={onCancel} />}
 
       {!example && input && id !== 0 && (
         <div className="results">

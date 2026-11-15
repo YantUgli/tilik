@@ -367,3 +367,40 @@ textarea[aria-invalid="true"] {
   margin: 0 auto;
   border-radius: 4px;
 }
+
+/* --- Disclaimer sebelum pemeriksaan (FR-UI-03) --- */
+.privacy-note {
+  margin: 0.5rem 0 1rem;
+}
+
+.disclaimer {
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  color: var(--fg);
+  padding: 1rem;
+}
+
+.disclaimer::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+.disclaimer h2 {
+  margin-top: 0;
+}
+
+.disclaimer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.disclaimer-actions button {
+  flex: 1 1 10rem;
+}
+
+.disclaimer-actions button.secondary {
+  background: transparent;
+  color: var(--fg);
+}
