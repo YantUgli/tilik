@@ -25,7 +25,7 @@ export function FaceSearch({ state, ready, onSearch }: Props) {
     <div className="face-search">
       {canSearch && (
         <button type="button" className="secondary" onClick={onSearch} disabled={!ready}>
-          {state.phase === "failed" ? "Coba cari wajah lagi" : "Cari wajah untuk disamarkan"}
+          {state.phase === "failed" ? "Coba cari wajah lagi" : "Cari wajah"}
         </button>
       )}
       {running && (

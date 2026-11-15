@@ -25,7 +25,7 @@ export function RedactPanel({ areas, disabled, onToggle, afterUrl, beforeUrl }: 
 
   return (
     <div className="redact">
-      <h3>{areas.some((a) => a.kind !== "face") ? "Sembunyikan bagian sensitif" : "Samarkan wajah"}</h3>
+      <h3>Bagian yang disamarkan</h3>
       <figure className="redact-preview">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element -- object URL lokal
@@ -45,7 +45,7 @@ export function RedactPanel({ areas, disabled, onToggle, afterUrl, beforeUrl }: 
           const multi = (counts.get(a.findingId) ?? 0) > 1;
           return (
             <li key={a.id}>
-              <label>
+              <label className="toggle">
                 <input type="checkbox" checked={!disabled.has(a.id)} onChange={(e) => onToggle(a.id, e.target.checked)} />{" "}
                 {a.label}
                 {multi && <span className="muted"> (bagian {n})</span>}

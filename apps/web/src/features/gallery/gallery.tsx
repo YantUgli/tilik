@@ -18,7 +18,7 @@ export function GalleryPicker({ onOpen }: { onOpen: (item: GalleryItem) => void 
   return (
     <section className="card gallery-card" aria-labelledby="gallery-title">
       <h2 id="gallery-title">Coba contoh</h2>
-      <p className="muted small">Lihat hasil TILIK tanpa menyiapkan foto.</p>
+      <p className="muted small">Ketuk salah satu contoh fiktif untuk melihat hasil TILIK tanpa menyiapkan foto.</p>
       <ul className="gallery-list">
         {GALLERY.map((g) => (
           <li key={g.id}>
@@ -28,6 +28,7 @@ export function GalleryPicker({ onOpen }: { onOpen: (item: GalleryItem) => void 
               <span className="gallery-text">
                 <strong>{g.title}</strong>
                 <span className="badge">Contoh fiktif</span>
+                <span className="gallery-cta">Lihat hasil →</span>
               </span>
             </button>
           </li>
@@ -78,6 +79,9 @@ export function GalleryView({ item, onClose }: { item: GalleryItem; onClose: () 
   const { level, incomplete } = item.result.risk;
   return (
     <div className="results gallery-view">
+      <button type="button" className="secondary block" onClick={onClose}>
+        ← Kembali ke pemeriksaan
+      </button>
       <p className="card gallery-banner small">
         <span className="badge">Contoh fiktif</span> Hasil contoh ini disimpan dari pemeriksaan sungguhan pada {GALLERY_DATE};
         tidak memanggil server.
@@ -85,7 +89,7 @@ export function GalleryView({ item, onClose }: { item: GalleryItem; onClose: () 
       <section className="card">
         <div className="layer-head">
           <h2>{item.title}</h2>
-          <button type="button" onClick={onClose}>
+          <button type="button" className="secondary" onClick={onClose}>
             Tutup contoh
           </button>
         </div>
@@ -97,7 +101,7 @@ export function GalleryView({ item, onClose }: { item: GalleryItem; onClose: () 
           </figcaption>
         </figure>
       </section>
-      <RiskCard risk={{ level, incomplete }} />
+      <RiskCard risk={{ level, incomplete }} layers={item.result.layers} />
       <LayerCard title={L1_TITLE} layer={l1} />
       {server.map((layer, i) => (
         <LayerCard key={i} title={SERVER_TITLES[i] ?? layer.layer} layer={layer} />

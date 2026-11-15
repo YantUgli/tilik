@@ -14,7 +14,7 @@ import { analyzeCaption, resolveApiUrl } from "@/lib/api";
 import { encodeSafeJpeg, type PreparedImages } from "@/lib/image/downscale";
 import { computeRisk } from "@/lib/risk";
 import type { LayerResult } from "@/lib/validate";
-import { LayerCard } from "./layer-card";
+import { LayerCard, layerOrder } from "./layer-card";
 import { RiskCard } from "./risk-card";
 import { OCR_FAILED_NOTE, OCR_PENDING_NOTE, SERVER_TITLES, initialSession, sessionReducer } from "./session";
 
@@ -122,35 +122,59 @@ export function Analyzer() {
   const all = session.l1 && server ? [session.l1, ...server.layers] : null;
   const risk = all ? computeRisk(all, { extraIncomplete: session.ocr === "error" }) : null;
 
+  // Setelah "Periksa": pindahkan fokus dan gulir ke ringkasan risiko (status tetap diumumkan lewat aria-live).
+  useEffect(() => {
+    if (id === 0) return;
+    const el = document.getElementById("ringkasan");
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.focus({ preventScroll: true });
+    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }, [id]);
+
+  const closeExample = useCallback(() => {
+    setExample(null);
+    document.getElementById("periksa")?.scrollIntoView({ block: "start" });
+  }, []);
+
+  // Kartu lapis diurutkan: temuan tinggi tampil paling dulu. Key stabil supaya L1Card tidak di-mount ulang.
+  const cards = [
+    { key: `l1-${id}`, order: layerOrder(session.l1), el: <L1Card key={`l1-${id}`} file={input?.file as File} images={input?.images as PreparedImages} areas={areas} onResult={onL1} /> },
+    ...serverLayers.map((layer, i) => ({
+      key: `${id}-${i}`,
+      order: layerOrder(layer),
+      el: (
+        <LayerCard key={`${id}-${i}`} title={SERVER_TITLES[i]} layer={layer} busy={server?.problem === "busy"}>
+          {i === 0 && session.ocr === "pending" && <p className="muted small">{OCR_PENDING_NOTE}</p>}
+          {i === 0 && session.ocr === "error" && <p className="status warn">{OCR_FAILED_NOTE}</p>}
+        </LayerCard>
+      ),
+    })),
+  ].sort((a, b) => a.order - b.order);
+
   return (
     <>
-      {example ? (
-        <GalleryView item={example} onClose={() => setExample(null)} />
-      ) : (
-        <GalleryPicker onOpen={openExample} />
-      )}
-
-      <PhotoInput key={formKey} onSubmit={onSubmit} onChange={onChange} />
-      <p className="muted small privacy-note">{PRIVACY_NOTE}</p>
+      <section id="periksa" className="tool" aria-label="Alat pemeriksa">
+        <PhotoInput key={formKey} onSubmit={onSubmit} onChange={onChange} />
+        <p className="muted small privacy-note">{PRIVACY_NOTE}</p>
+      </section>
 
       {gate.status === "pending" && <DisclaimerDialog onConfirm={onConfirm} onCancel={onCancel} />}
 
       {!example && input && id !== 0 && (
         <div className="results">
-          <RiskCard risk={risk}>
+          <RiskCard id="ringkasan" risk={risk} layers={all}>
             {server?.problem === "busy" && <p className="status warn">{server.message}</p>}
           </RiskCard>
 
-          <L1Card key={id} file={input.file} images={input.images} areas={areas} onResult={onL1} />
-
-          {serverLayers.map((layer, i) => (
-            <LayerCard key={`${id}-${i}`} title={SERVER_TITLES[i]} layer={layer} busy={server?.problem === "busy"}>
-              {i === 0 && session.ocr === "pending" && <p className="muted small">{OCR_PENDING_NOTE}</p>}
-              {i === 0 && session.ocr === "error" && <p className="status warn">{OCR_FAILED_NOTE}</p>}
-            </LayerCard>
-          ))}
+          <h2 className="results-title">Rincian pemeriksaan</h2>
+          {cards.map((c) => c.el)}
         </div>
       )}
+
+      <div id="contoh" className="gallery-anchor">
+        {example ? <GalleryView item={example} onClose={closeExample} /> : <GalleryPicker onOpen={openExample} />}
+      </div>
     </>
   );
 }
