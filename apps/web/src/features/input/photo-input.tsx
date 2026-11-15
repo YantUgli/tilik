@@ -78,7 +78,7 @@ export function PhotoInput({ onSubmit, onChange }: Props) {
   return (
     <section className="card input-card">
       <h2>Periksa sebelum unggah</h2>
-      <p className="muted">Pilih satu foto. Foto diproses di perangkatmu dulu; yang dikirim ke server hanya versi kecil (≤ 1024 px).</p>
+      <p className="muted">Pilih satu foto. Foto diperiksa di perangkatmu dan tidak dikirim; yang dikirim ke server hanya caption dan teks yang terbaca dari foto.</p>
 
       <label htmlFor={ids.file} className="field-label">
         Foto (JPG, PNG, atau WebP, maks. 10 MB)
