@@ -7,7 +7,9 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "TILIK",
     description: "Periksa foto dan caption sebelum diunggah ke media sosial.",
     lang: "id",
-    start_url: "/",
+    // id "/" = identitas yang sama dengan instalasi lama; aplikasi kini dibuka langsung ke alat.
+    id: "/",
+    start_url: "/periksa",
     scope: "/",
     display: "standalone",
     background_color: "#F4EBDD",

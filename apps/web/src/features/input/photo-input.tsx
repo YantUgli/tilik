@@ -97,7 +97,7 @@ export function PhotoInput({ onSubmit, onChange }: Props) {
           <img src={photo.previewUrl} alt="Pratinjau foto yang dipilih" width={photo.images.send.width} height={photo.images.send.height} />
           <figcaption className="muted">
             {photo.images.work.width}×{photo.images.work.height} px di perangkat · {photo.images.send.width}×{photo.images.send.height} px
-            untuk dikirim · siap dalam {photo.ms} ms
+            pratinjau · siap dalam {photo.ms} ms
           </figcaption>
         </figure>
       )}

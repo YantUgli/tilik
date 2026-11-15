@@ -476,3 +476,126 @@ textarea[aria-invalid="true"] {
   background: transparent;
   color: var(--fg);
 }
+
+/* T-25c: header nav, landing (/), tentang (/tentang). Hanya token Palet D; aturan lama tidak diubah. */
+.nav-bar {
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nav-main {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 0.75rem;
+  border-radius: 6px;
+  color: var(--fg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  background: var(--wall);
+}
+
+.nav-link[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+.landing h1,
+.about h1 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+
+.landing-lead,
+.about-lead {
+  font-size: 1.0625rem;
+  margin: 0 0 1rem;
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.landing-cta,
+.about-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 700;
+  border-radius: 8px;
+  flex: 1 1 12rem;
+}
+
+.landing-secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.25rem;
+  color: var(--fg);
+  font-weight: 600;
+  text-underline-offset: 4px;
+}
+
+.landing-section,
+.about-section {
+  margin-top: 1.5rem;
+}
+
+.landing-section h2,
+.about-section h2 {
+  margin-bottom: 0.35rem;
+}
+
+.landing-section p,
+.landing-steps,
+.landing-list {
+  margin: 0;
+}
+
+.landing-steps,
+.landing-list {
+  padding-left: 1.25rem;
+}
+
+.landing-steps li,
+.landing-list li {
+  margin-bottom: 0.25rem;
+}
+
+.landing-end {
+  margin-top: 1.75rem;
+}
+
+.about-section a {
+  color: var(--fg);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+@media (min-width: 768px) {
+  .landing h1,
+  .about h1 {
+    font-size: 2.25rem;
+  }
+
+  .landing-cta,
+  .about-cta {
+    flex: 0 0 auto;
+  }
+}

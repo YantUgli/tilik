@@ -16,7 +16,7 @@ const NO_DISABLED: ReadonlySet<string> = new Set();
 
 export function GalleryPicker({ onOpen }: { onOpen: (item: GalleryItem) => void }) {
   return (
-    <section className="card gallery-card" aria-labelledby="gallery-title">
+    <section id="contoh" className="card gallery-card" aria-labelledby="gallery-title">
       <h2 id="gallery-title">Coba contoh</h2>
       <p className="muted small">Lihat hasil TILIK tanpa menyiapkan foto.</p>
       <ul className="gallery-list">
